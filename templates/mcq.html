@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MCQ Quiz - StudyGenie</title>
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='mcq.css') }}"
+    >
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    <!-- Small inline fixes: Previous button + tighter chart card -->
+    <style>
+        .question-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prev-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #d8d8f0;
+            background: #fff;
+            color: #4338ca;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .prev-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .memory-tip canvas {
+            display: block;
+            margin: 6px auto 0;
+        }
+
+        .page-top h1 {
+            font-size: 24px !important;
+        }
+
+        /* Tighten sidebar spacing to match the flashcard page */
+        .sidebar .tagline {
+            margin-bottom: 24px !important;
+        }
+
+        .sidebar .menu-link {
+            margin-bottom: 4px !important;
+        }
+
+        .sidebar {
+            width: 260px !important;
+            min-width: 260px !important;
+            max-width: 260px !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <h1 class="logo">StudyGenie</h1>
+
+        <p class="tagline">
+            AI-Powered Smart Learning<br>
+            Assistant
+        </p>
+
+        <nav>
+
+            <a href="/dashboard" class="menu-link">
+                <i class="bi bi-grid-fill"></i>
+                Dashboard
+            </a>
+
+            <a href="/documents" class="menu-link">
+                <i class="bi bi-folder2-open"></i>
+                My Documents
+            </a>
+
+            <a href="/chat" class="menu-link">
+                <i class="bi bi-chat-dots"></i>
+                Chat With Notes
+            </a>
+
+            <a href="/quiz" class="menu-link active">
+                <i class="bi bi-card-checklist"></i>
+                Quiz Generator
+            </a>
+
+            <a href="{{ url_for('study_planner') }}" class="menu-link">
+                <i class="bi bi-calendar-check"></i>
+                Study Planner
+            </a>
+
+            <a href="/logout" class="menu-link">    
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+        <!-- TOP -->
+        <div class="page-top">
+
+            <div>
+
+                <h1>Multiple Choice Quiz</h1>
+
+                <p>
+                    Test your understanding with exam-style multiple choice questions.
+                </p>
+            </div>
+
+            <button
+                class="back-btn"
+                onclick="window.location.href='/dashboard'">
+                ← Back to Dashboard
+            </button>
+
+        </div>
+
+
+        <!-- QUIZ LAYOUT -->
+        <div class="quiz-layout">
+
+
+            <!-- QUESTION CARD -->
+            <section class="question-section">
+
+                <div class="question-header">
+
+                    <div>
+                        <span class="question-label">
+                            QUESTION
+                        </span>
+
+                        <h2 id="questionCounter">
+                            Question 1 of 10
+                        </h2>
+                    </div>
+
+                    <span
+                        class="difficulty"
+                        id="difficulty">
+                        Medium
+                    </span>
+
+                </div>
+
+
+                <!-- QUESTION -->
+                <div class="question-card">
+
+                    <span
+                        class="question-number"
+                        id="questionNumber">
+                        01
+                    </span>
+
+                    <h2 id="questionText">
+                        Loading question...
+                    </h2>
+
+
+                    <!-- OPTIONS -->
+                    <div
+                        class="options"
+                        id="optionsContainer">
+
+                        <button
+                            class="option"
+                            onclick="selectOption(0)">
+
+                            <span class="option-letter">A</span>
+
+                            <span
+                                id="option0">
+                                Loading...
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            class="option"
+                            onclick="selectOption(1)">
+
+                            <span class="option-letter">B</span>
+
+                            <span
+                                id="option1">
+                                Loading...
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            class="option"
+                            onclick="selectOption(2)">
+
+                            <span class="option-letter">C</span>
+
+                            <span
+                                id="option2">
+                                Loading...
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            class="option"
+                            onclick="selectOption(3)">
+
+                            <span class="option-letter">D</span>
+
+                            <span
+                                id="option3">
+                                Loading...
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- NAVIGATION -->
+                    <div class="question-actions">
+
+                        <button
+                            type="button"
+                            id="prevButton"
+                            class="prev-btn"
+                            onclick="previousQuestion()"
+                            disabled>
+                            ← Previous
+                        </button>
+
+                        <button
+                            type="button"
+                            id="nextButton"
+                            class="next-btn"
+                            onclick="nextQuestion()"
+                            disabled>
+                            Next Question →
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- PROGRESS -->
+            <aside class="progress-panel">
+
+                <div class="progress-header">
+
+                    <div>
+
+                        <span>
+                            YOUR PROGRESS
+                        </span>
+
+                        <h3>
+                            Keep going! 🔥
+                        </h3>
+
+                    </div>
+
+                    <strong id="percentage">
+                        0%
+                    </strong>
+
+                </div>
+
+
+                <!-- BAR -->
+                <div class="progress-bar">
+
+                    <div
+                        id="progressFill"
+                        class="progress-fill">
+                    </div>
+
+                </div>
+
+
+                <!-- STATS -->
+                <div class="stats">
+
+
+                    <div class="stat correct">
+
+                        <div class="stat-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            <strong id="correctCount">
+                                0
+                            </strong>
+
+                            <span>
+                                Correct
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat incorrect">
+
+                        <div class="stat-icon">
+                            ✕
+                        </div>
+
+                        <div>
+                            <strong id="incorrectCount">
+                                0
+                            </strong>
+
+                            <span>
+                                Incorrect
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat remaining">
+
+                        <div class="stat-icon">
+                            ○
+                        </div>
+
+                        <div>
+                            <strong id="remainingCount">
+                                10
+                            </strong>
+
+                            <span>
+                                Remaining
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUIZ PERFORMANCE CHART (replaces Quick Tip) -->
+                <div class="memory-tip" style="text-align:center;">
+
+                    <div class="tip-title">
+                        📊 Quiz Performance
+                    </div>
+
+                    <div style="max-width: 110px; margin: 4px auto;">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="restart-btn"
+                    onclick="restartQuiz()">
+
+                    ↻ Restart Quiz
+
+                </button>
+
+            </aside>
+
+        </div>
+
+
+        <!-- RESULT -->
+        <section
+            id="resultSection"
+            class="result-section"
+            style="display:none;">
+
+            <div class="result-icon">
+                🎉
+            </div>
+
+            <h2>Quiz Complete!</h2>
+
+            <p>
+                Great work! Here is your result.
+            </p>
+
+            <div class="score">
+
+                <strong id="finalScore">
+                    0 / 10
+                </strong>
+
+                <span id="finalPercentage">
+                    0%
+                </span>
+
+            </div>
+
+
+            <div class="result-stats">
+
+                <div>
+                    <strong id="finalCorrect">
+                        0
+                    </strong>
+
+                    <span>Correct</span>
+                </div>
+
+                <div>
+                    <strong id="finalIncorrect">
+                        0
+                    </strong>
+
+                    <span>Incorrect</span>
+                </div>
+
+            </div>
+
+
+            <div class="result-actions">
+
+                <button
+                    onclick="restartQuiz()"
+                    class="try-btn">
+
+                    Try Again
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    /* ==========================================
+       MCQ QUIZ DATA
+    ========================================== */
+
+    let questions = [];
+
+    let currentQuestion = 0;
+
+    let selectedAnswer = null;
+
+    let userAnswers = []; // stores the chosen option index per question, or null if unanswered
+
+    let correctAnswers = 0;
+
+    let incorrectAnswers = 0;
+
+    let quizFinished = false;
+
+
+    /* ==========================================
+       GET FILE FROM URL
+    ========================================== */
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const selectedFile =
+        params.get("file");
+
+
+    /* ==========================================
+       LOAD MCQ QUESTIONS
+    ========================================== */
+
+    async function loadQuestions() {
+
+        if (!selectedFile) {
+
+            document.getElementById("questionText").innerText =
+                "No study file selected.";
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/generate-mcq?file=" +
+                    encodeURIComponent(selectedFile)
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to generate questions"
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            questions =
+                data.questions || data;
+
+
+            if (!questions.length) {
+
+                document.getElementById("questionText").innerText =
+                    "No questions could be generated.";
+
+                return;
+            }
+
+
+            /* Minimum 10 if backend gives more */
+            questions =
+                questions.slice(0, 10);
+
+
+            userAnswers =
+                new Array(questions.length).fill(null);
+
+
+            currentQuestion = 0;
+
+            correctAnswers = 0;
+
+            incorrectAnswers = 0;
+
+            setupProgressChart();
+
+            showQuestion();
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            document.getElementById("questionText").innerText =
+                "Unable to generate quiz questions.";
+
+        }
+
+    }
+
+
+    /* ==========================================
+       SHOW QUESTION
+    ========================================== */
+
+   function showQuestion() {
+
+    const question = questions[currentQuestion];
+
+    if (!question) return;
+
+    // Restore any previous answer for this question (if user navigated back)
+    const previousAnswer = userAnswers[currentQuestion];
+
+    selectedAnswer = previousAnswer;
+
+    // Question counter
+    document.getElementById("questionCounter").innerText =
+        `Question ${currentQuestion + 1} of ${questions.length}`;
+
+    // Question number
+    document.getElementById("questionNumber").innerText =
+        String(currentQuestion + 1).padStart(2, "0");
+
+    // Question text
+    document.getElementById("questionText").innerText =
+        question.question || question.text || "";
+
+    // Difficulty
+    document.getElementById("difficulty").innerText =
+        question.difficulty || "Medium";
+
+    // Options
+    const options =
+        question.options || question.choices || [];
+
+    for (let i = 0; i < 4; i++) {
+
+        const option =
+            document.querySelectorAll(".option")[i];
+
+        const text =
+            document.getElementById("option" + i);
+
+        if (options[i]) {
+
+            text.innerText = options[i];
+
+            option.style.display = "flex";
+
+        } else {
+
+            option.style.display = "none";
+        }
+
+        option.classList.remove(
+            "selected",
+            "correct",
+            "incorrect"
+        );
+    }
+
+    // If this question was already answered, restore the visual state
+    if (previousAnswer !== null) {
+
+        const correct = getCorrectAnswer(question);
+
+        const optionEls = document.querySelectorAll(".option");
+
+        optionEls[previousAnswer].classList.add("selected");
+
+        if (previousAnswer === correct) {
+
+            optionEls[previousAnswer].classList.add("correct");
+
+        } else {
+
+            optionEls[previousAnswer].classList.add("incorrect");
+
+            if (optionEls[correct]) {
+                optionEls[correct].classList.add("correct");
+            }
+        }
+    }
+
+    // Next button
+    const nextButton =
+        document.getElementById("nextButton");
+
+    nextButton.disabled = previousAnswer === null;
+
+    // Last question par Submit Quiz
+    if (currentQuestion === questions.length - 1) {
+
+        nextButton.innerText = "Submit Quiz ✓";
+
+    } else {
+
+        nextButton.innerText = "Next Question →";
+    }
+
+    // Previous button
+    const prevButton =
+        document.getElementById("prevButton");
+
+    if (prevButton) {
+        prevButton.disabled = currentQuestion === 0;
+    }
+
+    updateProgress();
+}
+
+    /* ==========================================
+       SELECT OPTION
+    ========================================== */
+
+    function selectOption(index) {
+
+        if (selectedAnswer !== null)
+            return;
+
+
+        const question =
+            questions[currentQuestion];
+
+
+        const options =
+            document.querySelectorAll(".option");
+
+
+        selectedAnswer = index;
+
+        userAnswers[currentQuestion] = index;
+
+
+        options.forEach(option => {
+
+            option.classList.remove(
+                "selected"
+            );
+
+        });
+
+
+        options[index].classList.add(
+            "selected"
+        );
+
+
+        const correct =
+            getCorrectAnswer(question);
+
+
+        if (index === correct) {
+
+            options[index].classList.add(
+                "correct"
+            );
+
+            correctAnswers++;
+
+        } else {
+
+            options[index].classList.add(
+                "incorrect"
+            );
+
+
+            if (options[correct]) {
+
+                options[correct].classList.add(
+                    "correct"
+                );
+
+            }
+
+            incorrectAnswers++;
+
+        }
+
+
+        document.getElementById("nextButton").disabled =
+            false;
+
+
+        updateProgress();
+
+    }
+
+
+    /* ==========================================
+       GET CORRECT ANSWER
+    ========================================== */
+
+    function getCorrectAnswer(question) {
+
+        if (typeof question.answer === "number") {
+
+            return question.answer;
+
+        }
+
+
+        if (typeof question.correct_answer === "number") {
+
+            return question.correct_answer;
+
+        }
+
+
+        const answer =
+            String(
+                question.answer ||
+                question.correct_answer ||
+                ""
+            ).trim();
+
+
+        const letters = ["A", "B", "C", "D"];
+
+
+        const letterIndex =
+            letters.indexOf(
+                answer.toUpperCase()
+            );
+
+
+        if (letterIndex !== -1)
+            return letterIndex;
+
+
+        const options =
+            question.options ||
+            question.choices ||
+            [];
+
+
+        return options.findIndex(
+            option =>
+                String(option).trim() === answer
+        );
+
+    }
+
+
+    /* ==========================================
+       PREVIOUS QUESTION
+    ========================================== */
+
+    function previousQuestion() {
+
+        if (currentQuestion > 0) {
+
+            currentQuestion--;
+
+            showQuestion();
+        }
+    }
+
+
+    /* ==========================================
+       NEXT QUESTION
+    ========================================== */
+
+    function nextQuestion() {
+
+    // Answer select nahi kiya
+    if (selectedAnswer === null) {
+        return;
+    }
+
+    // Agar last question nahi hai
+    if (currentQuestion < questions.length - 1) {
+
+        currentQuestion++;
+
+        showQuestion();
+
+    } else {
+
+        // Last question -> Submit Quiz
+        finishQuiz();
+    }
+}
+
+    /* ==========================================
+       PROGRESS DONUT CHART
+    ========================================== */
+
+    let progressChart = null;
+
+    function setupProgressChart() {
+
+        const ctx = document.getElementById("progressChart");
+
+        if (!ctx) {
+            return;
+        }
+
+        if (progressChart) {
+            progressChart.destroy();
+        }
+
+        progressChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: ["Correct", "Incorrect", "Remaining"],
+                datasets: [{
+                    data: [0, 0, questions.length || 10],
+                    backgroundColor: ["#22c55e", "#ef4444", "#c7c7f5"],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: "65%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            boxWidth: 6,
+                            boxHeight: 6,
+                            usePointStyle: true,
+                            pointStyle: "circle",
+                            font: { size: 10 },
+                            padding: 8
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateProgressChart(correct, incorrect, remaining) {
+
+        if (!progressChart) {
+            return;
+        }
+
+        progressChart.data.datasets[0].data = [correct, incorrect, remaining];
+        progressChart.update();
+    }
+
+
+    /* ==========================================
+       PROGRESS
+    ========================================== */
+
+    function updateProgress() {
+
+        const total =
+            questions.length;
+
+
+        const answered =
+            correctAnswers +
+            incorrectAnswers;
+
+
+        const percentage =
+            total
+                ? Math.round(
+                    (answered / total) * 100
+                )
+                : 0;
+
+
+        const remaining =
+            Math.max(
+                total - answered,
+                0
+            );
+
+
+        document.getElementById("correctCount").innerText =
+            correctAnswers;
+
+
+        document.getElementById("incorrectCount").innerText =
+            incorrectAnswers;
+
+
+        document.getElementById("remainingCount").innerText =
+            remaining;
+
+
+        document.getElementById("percentage").innerText =
+            percentage + "%";
+
+
+        document.getElementById("progressFill").style.width =
+            percentage + "%";
+
+
+        updateProgressChart(correctAnswers, incorrectAnswers, remaining);
+
+    }
+
+
+    /* ==========================================
+       FINISH
+    ========================================== */
+function finishQuiz() {
+
+    quizFinished = true;
+
+    const total = questions.length;
+
+    const percentage = total
+        ? Math.round((correctAnswers / total) * 100)
+        : 0;
+
+    // Update actual result on side panel
+    document.getElementById("correctCount").innerText =
+        correctAnswers;
+
+    document.getElementById("incorrectCount").innerText =
+        incorrectAnswers;
+
+    document.getElementById("remainingCount").innerText =
+        0;
+
+    document.getElementById("percentage").innerText =
+        percentage + "%";
+
+    document.getElementById("progressFill").style.width =
+        percentage + "%";
+
+    updateProgressChart(correctAnswers, incorrectAnswers, 0);
+
+    // Show custom submit popup
+    showSubmitPopup(correctAnswers, incorrectAnswers, total, percentage);
+}
+    /* ==========================================
+       RESTART
+    ========================================== */
+
+    function restartQuiz() {
+
+        currentQuestion = 0;
+
+        selectedAnswer = null;
+
+        userAnswers =
+            new Array(questions.length).fill(null);
+
+        correctAnswers = 0;
+
+        incorrectAnswers = 0;
+
+        quizFinished = false;
+
+
+        document.querySelector(".quiz-layout").style.display =
+            "grid";
+
+
+        document.getElementById("resultSection").style.display =
+            "none";
+
+
+        showQuestion();
+
+    }
+
+
+    /* ==========================================
+       REVIEW
+    ========================================== */
+function reviewAnswers() {
+    // Review Answers feature will be added later
+}
+
+    /* ==========================================
+       START
+    ========================================== */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+            loadQuestions();
+        }
+    );
+
+</script>
+
+</body>
+</html>

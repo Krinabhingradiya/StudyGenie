@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Planner - StudyGenie</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+      .sp-main{
+        margin-left:250px;
+        padding:26px 32px;
+        flex:1;
+        min-width:0;
+        width:calc(100% - 250px);
+        box-sizing:border-box;
+      }
+      .sp-title{ font-size:26px; font-weight:700; margin:0 0 3px; }
+      .sp-subtitle{ font-size:13.5px; color:#858192; margin:0 0 22px; }
+
+      .sp-setup-card{
+        background:#fff; border:1px solid #e8e5ef; border-radius:20px; padding:24px 28px;
+        margin-bottom:24px; box-shadow:0 8px 30px rgba(54,44,90,0.04);
+      }
+      .sp-setup-row{ display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap; }
+      .sp-field{ flex:1; min-width:220px; }
+      .sp-field label{ display:block; font-size:12.5px; font-weight:700; color:#5a5670; margin-bottom:8px; text-transform:uppercase; letter-spacing:.03em; }
+      .sp-select, .sp-number{
+        width:100%; padding:12px 16px; border:1px solid #e3e0eb; border-radius:12px; font-size:14px; color:#2d2a3e;
+      }
+      .sp-generate-btn{
+        background:#674de1; color:#fff; border:none; padding:12px 28px; border-radius:12px;
+        font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap;
+      }
+      .sp-generate-btn:hover{ background:#5a3fd0; }
+      .sp-generate-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+      /* ===== NEW: Overview row with progress ring ===== */
+      .sp-overview-row{
+        display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;
+      }
+      .sp-ring-card{
+        background:#fff; border:1px solid #e8e5ef; border-radius:18px; padding:18px 22px;
+        display:flex; align-items:center; justify-content:space-between; gap:18px; flex:1; min-width:260px;
+        box-shadow:0 6px 20px rgba(54,44,90,0.04);
+      }
+      .sp-ring-wrap{ position:relative; width:76px; height:76px; flex-shrink:0; }
+      .sp-ring-wrap svg{ transform:rotate(-90deg); width:76px; height:76px; }
+      .sp-ring-track{ fill:none; stroke:#eee9ff; stroke-width:8; }
+      .sp-ring-fill{ fill:none; stroke:#7657eb; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset .4s ease; }
+      .sp-ring-percent{
+        position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+        font-size:16px; font-weight:800; color:#2d2a3e;
+      }
+      .sp-ring-info-title{ font-size:14px; font-weight:700; color:#2d2a3e; margin-bottom:3px; }
+      .sp-ring-info-sub{ font-size:12.5px; color:#858192; }
+
+      .sp-reset-card{
+        background:#fff; border:1px solid #e8e5ef; border-radius:18px; padding:18px 22px;
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 6px 20px rgba(54,44,90,0.04);
+      }
+
+      /* ===== NEW: Today's Focus highlight card ===== */
+      .sp-focus-card{
+        background:linear-gradient(135deg,#7657eb,#a18af8);
+        border-radius:18px; padding:20px 26px; margin-bottom:20px;
+        color:#fff; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+      }
+      .sp-focus-label{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.85; margin-bottom:4px; }
+      .sp-focus-title{ font-size:18px; font-weight:700; }
+      .sp-focus-sub{ font-size:13px; opacity:.9; margin-top:2px; }
+      .sp-focus-btn{
+        background:#fff; color:#674de1; border:none; padding:10px 20px; border-radius:10px;
+        font-weight:700; font-size:13.5px; cursor:pointer; white-space:nowrap;
+      }
+      .sp-focus-btn:hover{ background:#f3f0ff; }
+      .sp-focus-done{
+        background:linear-gradient(135deg,#39a17c,#5fc79e);
+      }
+
+      .sp-days-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+        gap:16px;
+      }
+      .sp-day-card{
+        background:#fff; border:1px solid #e8e5ef; border-radius:18px; padding:20px 22px;
+        box-shadow:0 6px 20px rgba(54,44,90,0.04);
+        scroll-margin-top:20px;
+        display:flex;
+        flex-direction:column;
+      }
+      .sp-day-card.sp-day-active{ border-color:#c9bdf8; box-shadow:0 6px 20px rgba(103,77,225,0.12); }
+      .sp-day-card.sp-day-locked{ opacity:.55; pointer-events:none; position:relative; }
+      .sp-day-locked-badge{
+        position:absolute; top:16px; right:18px; font-size:12px; color:#a19dab;
+        display:flex; align-items:center; gap:5px;
+      }
+
+      @keyframes sp-day-flash{
+        0%{ box-shadow:0 0 0 0 rgba(103,77,225,0.5); }
+        70%{ box-shadow:0 0 0 14px rgba(103,77,225,0); }
+        100%{ box-shadow:0 0 0 0 rgba(103,77,225,0); }
+      }
+      .sp-day-card.sp-day-flash{
+        animation:sp-day-flash 700ms ease-out 2;
+      }
+
+      @keyframes sp-confetti-fall{
+        0%{ transform:translateY(-10px) rotate(0deg); opacity:1; }
+        100%{ transform:translateY(160px) rotate(360deg); opacity:0; }
+      }
+      .sp-confetti-piece{
+        position:absolute; top:0; width:8px; height:8px; border-radius:2px;
+        animation:sp-confetti-fall 900ms ease-out forwards;
+        pointer-events:none;
+      }
+      .sp-day-head{ display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+      .sp-day-badge{
+        width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,#7657eb,#a18af8);
+        color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0;
+      }
+      .sp-day-focus{ font-size:14.5px; font-weight:700; color:#2d2a3e; line-height:1.3; }
+      .sp-day-percent{ margin-left:auto; font-size:12.5px; font-weight:700; color:#674de1; }
+
+      .sp-task{
+        display:flex; align-items:flex-start; gap:10px; padding:8px 6px; border-radius:10px; cursor:pointer; transition:.15s;
+      }
+      .sp-task:hover{ background:#f7f5fc; }
+      .sp-task-check{
+        width:18px; height:18px; border-radius:6px; border:2px solid #d8d4e8; flex-shrink:0; margin-top:1px;
+        display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; transition:.15s;
+      }
+      .sp-task.done .sp-task-check{ background:#39a17c; border-color:#39a17c; }
+      .sp-task-text{ font-size:13px; color:#2d2a3e; line-height:1.4; }
+      .sp-task.done .sp-task-text{ color:#a19dab; text-decoration:line-through; }
+      .sp-task-body{ display:flex; flex-direction:column; gap:2px; }
+      .sp-task-time{
+        font-size:11px; color:#9a94ab; display:flex; align-items:center; gap:4px;
+      }
+      .sp-task.done .sp-task-time{ color:#c7c2d4; }
+      .sp-day-time{ font-size:11.5px; color:#858192; margin-left:8px; }
+
+      .sp-empty{ text-align:center; padding:60px 20px; color:#a19dab; }
+      .sp-empty i{ font-size:40px; color:#d8d1f5; display:block; margin-bottom:12px; }
+
+      .sp-reset-btn{
+        border:1px solid #e3e0eb; background:#fff; color:#625e6e; border-radius:10px;
+        padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer;
+      }
+      .sp-reset-btn:hover{ border-color:#c9bdf8; color:#674de1; }
+    </style>
+</head>
+
+<body>
+
+<div class="d-flex">
+
+    <div class="sidebar">
+        <h4 class="logo">StudyGenie</h4>
+        <p class="text-white-50 small mb-4">AI-Powered Smart Learning Assistant</p>
+
+        <a href="/dashboard" class="menu-link"><i class="bi bi-grid-fill me-2"></i> Dashboard</a>
+        <a href="/documents" class="menu-link"><i class="bi bi-folder2-open me-2"></i> My Documents</a>
+        <a href="/chat" class="menu-link"><i class="bi bi-chat-dots me-2"></i> Chat With Notes</a>
+        <a href="{{ url_for('quiz') }}" class="menu-link"><i class="bi bi-patch-question me-2"></i> Quiz Generator</a>
+        <a href="#" class="menu-link active"><i class="bi bi-calendar-check me-2"></i> Study Planner</a>
+        <a href="/interview" class="menu-link"><i class="bi bi-person-workspace me-2"></i> Interview Prep</a>
+        <a href="/logout" class="menu-link"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+    </div>
+
+    <main class="sp-main">
+
+        <h1 class="sp-title">Study Planner</h1>
+        <p class="sp-subtitle">Get an AI-generated day-by-day schedule from your study material.</p>
+
+        <div class="sp-setup-card">
+            <div class="sp-setup-row">
+                <div class="sp-field">
+                    <label>Study Material</label>
+                    <select class="sp-select" id="spFileSelect">
+                        <option value="">Select a document</option>
+                        {% for file in files %}
+                        <option value="{{ file }}">{{ file }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="sp-field" style="max-width:160px;">
+                    <label>Days Available</label>
+                    <input type="number" class="sp-number" id="spDaysInput" min="1" max="14" value="3">
+                </div>
+                <button class="sp-generate-btn" id="spGenerateBtn" onclick="spGeneratePlan()">
+                    <i class="bi bi-stars me-1"></i> Generate Plan
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== NEW: Overview row (progress ring + reset) ===== -->
+        <div id="spOverview" class="sp-overview-row" style="display:none;">
+            <div class="sp-ring-card">
+                <div style="display:flex; align-items:center; gap:18px;">
+                    <div class="sp-ring-wrap">
+                        <svg viewBox="0 0 76 76">
+                            <circle class="sp-ring-track" cx="38" cy="38" r="32"></circle>
+                            <circle class="sp-ring-fill" id="spRingFill" cx="38" cy="38" r="32"
+                                    stroke-dasharray="201" stroke-dashoffset="201"></circle>
+                        </svg>
+                        <div class="sp-ring-percent" id="spRingPercentText">0%</div>
+                    </div>
+                    <div>
+                        <div class="sp-ring-info-title" id="spProgressLabel">0 of 0 tasks done</div>
+                        <div class="sp-ring-info-sub" id="spDaysLabel">0 day plan</div>
+                    </div>
+                </div>
+                <button class="sp-reset-btn" onclick="spResetProgress()"><i class="bi bi-arrow-repeat"></i> Reset</button>
+            </div>
+        </div>
+
+        <!-- ===== NEW: Today's Focus card ===== -->
+        <div id="spFocusCard" class="sp-focus-card" style="display:none;">
+            <div>
+                <div class="sp-focus-label" id="spFocusLabel">Today's Focus</div>
+                <div class="sp-focus-title" id="spFocusTitle"></div>
+                <div class="sp-focus-sub" id="spFocusSub"></div>
+            </div>
+            <button class="sp-focus-btn" id="spFocusBtn" onclick="spHandleFocusClick()">Jump to task</button>
+        </div>
+
+        <div id="spPlanContainer">
+            <div class="sp-empty">
+                <i class="bi bi-calendar2-week"></i>
+                <p>Select a document and how many days you have, then generate your plan.</p>
+            </div>
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+let spPlan = [];
+let spCurrentFile = null;
+let spActiveDayIndex = null;
+let spPlanIsComplete = false;
+const SP_RING_CIRCUMFERENCE = 201; // 2 * PI * 32, matches the SVG radius above
+
+async function spGeneratePlan(){
+    const file = document.getElementById('spFileSelect').value;
+    const days = document.getElementById('spDaysInput').value || 3;
+
+    if (!file) {
+        alert('Please select a document first.');
+        return;
+    }
+
+    spCurrentFile = file;
+    const btn = document.getElementById('spGenerateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Generating...';
+
+    document.getElementById('spPlanContainer').innerHTML = `
+        <div class="sp-empty">
+            <i class="bi bi-hourglass-split"></i> 
+            <p>Building your study plan...</p>
+        </div>`;
+    document.getElementById('spFocusCard').style.display = 'none';
+
+    try {
+        const response = await fetch('/generate-study-plan?file=' + encodeURIComponent(file) + '&days=' + encodeURIComponent(days));
+        const data = await response.json();
+
+        if (!data.success) {
+            document.getElementById('spPlanContainer').innerHTML = `
+                <div class="sp-empty"><p>${data.message || 'Could not generate a plan. Please try again.'}</p></div>`;
+            return;
+        }
+
+        spPlan = data.plan || [];
+        spRenderPlan();
+
+    } catch (error) {
+        document.getElementById('spPlanContainer').innerHTML = `
+            <div class="sp-empty"><p>Could not reach the server. Please try again.</p></div>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Generate Plan';
+    }
+}
+
+function spProgressKey(){
+    return 'studygenie_plan_progress_' + spCurrentFile;
+}
+
+function spGetProgress(){
+    try {
+        return JSON.parse(localStorage.getItem(spProgressKey())) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function spSaveProgress(progress){
+    localStorage.setItem(spProgressKey(), JSON.stringify(progress));
+}
+
+function spRenderPlan(){
+    const container = document.getElementById('spPlanContainer');
+    const progress = spGetProgress();
+
+    if (spPlan.length === 0) {
+        container.innerHTML = `<div class="sp-empty"><p>No plan generated.</p></div>`;
+        document.getElementById('spFocusCard').style.display = 'none';
+        return;
+    }
+
+    let html = '<div class="sp-days-grid">';
+    let activeDayIndex = null; // first day that isn't 100% complete
+    let previousDayDone = true; // Day 1 is always unlocked
+
+    spPlan.forEach((day, dayIndex) => {
+        const doneCount = day.tasks.filter((_, i) => progress[dayIndex + '-' + i]).length;
+        const percent = Math.round((doneCount / day.tasks.length) * 100);
+        const isLocked = !previousDayDone;
+        const totalMinutes = day.tasks.reduce((sum, t) => sum + (typeof t === 'object' && t.minutes ? t.minutes : 0), 0);
+
+        if (activeDayIndex === null && percent < 100) {
+            activeDayIndex = dayIndex;
+        }
+
+        html += `<div class="sp-day-card ${activeDayIndex === dayIndex ? 'sp-day-active' : ''} ${isLocked ? 'sp-day-locked' : ''}" id="sp-day-${dayIndex}">
+            ${isLocked ? '<div class="sp-day-locked-badge"><i class="bi bi-lock-fill"></i> Complete previous day first</div>' : ''}
+            <div class="sp-day-head">
+                <div class="sp-day-badge">D${day.day}</div>
+                <div>
+                    <div class="sp-day-focus">${day.focus}</div>
+                    ${totalMinutes > 0 && !isLocked ? `<div class="sp-day-time"><i class="bi bi-clock"></i> ~${totalMinutes} min</div>` : ''}
+                </div>
+                <div class="sp-day-percent">${isLocked ? '' : percent + '%'}</div>
+            </div>`;
+
+        day.tasks.forEach((task, taskIndex) => {
+            const key = dayIndex + '-' + taskIndex;
+            const isDone = !!progress[key];
+            const taskText = typeof task === 'string' ? task : task.text;
+            const taskMinutes = typeof task === 'string' ? null : task.minutes;
+            html += `<div class="sp-task ${isDone ? 'done' : ''}" onclick="spToggleTask('${key}', event)">
+                <div class="sp-task-check">${isDone ? '✓' : ''}</div>
+                <div class="sp-task-body">
+                    <div class="sp-task-text">${taskText}</div>
+                    ${taskMinutes ? `<div class="sp-task-time"><i class="bi bi-clock"></i> ${taskMinutes} min</div>` : ''}
+                </div>
+            </div>`;
+        });
+
+        html += `</div>`;
+        previousDayDone = percent === 100;
+    });
+
+    html += '</div>'; // closes .sp-days-grid
+
+    container.innerHTML = html;
+    document.getElementById('spOverview').style.display = 'flex';
+    spUpdateOverview();
+    spUpdateFocusCard(activeDayIndex, progress);
+}
+
+function spBindFocusButton(){
+    const btn = document.getElementById('spFocusBtn');
+    // remove any previously attached listener by cloning the node
+    const freshBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(freshBtn, btn);
+    return freshBtn;
+}
+
+function spUpdateFocusCard(activeDayIndex, progress){
+    const card = document.getElementById('spFocusCard');
+
+    spActiveDayIndex = activeDayIndex;
+    spPlanIsComplete = (activeDayIndex === null);
+
+    if (spPlanIsComplete) {
+        // every day is fully complete
+        card.style.display = 'flex';
+        card.classList.add('sp-focus-done');
+        document.getElementById('spFocusLabel').innerText = 'Plan Complete';
+        document.getElementById('spFocusTitle').innerText = 'You finished every day of this plan! 🎉';
+        document.getElementById('spFocusSub').innerText = 'Great work — take a quiz to lock it in.';
+        document.getElementById('spFocusBtn').innerText = 'Take a Quiz';
+        return;
+    }
+
+    const day = spPlan[activeDayIndex];
+    const remainingTasks = day.tasks.filter((_, i) => !progress[activeDayIndex + '-' + i]);
+    const remaining = remainingTasks.length;
+    const remainingMinutes = remainingTasks.reduce((sum, t) => sum + (typeof t === 'object' && t.minutes ? t.minutes : 0), 0);
+
+    card.style.display = 'flex';
+    card.classList.remove('sp-focus-done');
+    document.getElementById('spFocusLabel').innerText = "Today's Focus";
+    document.getElementById('spFocusTitle').innerText = `Day ${day.day} — ${day.focus}`;
+    document.getElementById('spFocusSub').innerText =
+        (remaining === 1 ? '1 task left' : `${remaining} tasks left`) +
+        (remainingMinutes > 0 ? ` · ~${remainingMinutes} min` : '');
+    document.getElementById('spFocusBtn').innerText = 'Jump to task';
+}
+
+function spHandleFocusClick(){
+    if (spPlanIsComplete) {
+        window.location.href = "{{ url_for('quiz') }}";
+        return;
+    }
+    spScrollToActiveDay(spActiveDayIndex);
+}
+
+function spScrollToActiveDay(dayIndex){
+    const activeCard = document.getElementById('sp-day-' + dayIndex);
+    if (activeCard) {
+        activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        activeCard.classList.remove('sp-day-flash');
+        void activeCard.offsetWidth;
+        activeCard.classList.add('sp-day-flash');
+    }
+}
+
+function spToggleTask(key, event){
+    const progress = spGetProgress();
+    progress[key] = !progress[key];
+    spSaveProgress(progress);
+
+    // check if this action just completed the day, to fire confetti
+    if (progress[key]) {
+        const dayIndex = parseInt(key.split('-')[0]);
+        const day = spPlan[dayIndex];
+        const doneCount = day.tasks.filter((_, i) => progress[dayIndex + '-' + i]).length;
+        if (doneCount === day.tasks.length && event) {
+            spFireConfetti(event.currentTarget);
+        }
+    }
+
+    spRenderPlan();
+}
+
+function spFireConfetti(anchorEl){
+    if (!anchorEl) return;
+    const colors = ['#7657eb', '#a18af8', '#39a17c', '#f5a623', '#e0577b'];
+    const rect = anchorEl.getBoundingClientRect();
+
+    for (let i = 0; i < 18; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'sp-confetti-piece';
+        piece.style.background = colors[i % colors.length];
+        piece.style.left = (rect.left + rect.width / 2 + (Math.random() * 60 - 30)) + 'px';
+        piece.style.top = (rect.top + window.scrollY) + 'px';
+        piece.style.position = 'fixed';
+        piece.style.animationDelay = (Math.random() * 120) + 'ms';
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 1200);
+    }
+}
+
+function spUpdateOverview(){
+    const progress = spGetProgress();
+    let total = 0, done = 0;
+
+    spPlan.forEach((day, dayIndex) => {
+        day.tasks.forEach((task, taskIndex) => {
+            total++;
+            if (progress[dayIndex + '-' + taskIndex]) done++;
+        });
+    });
+
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    document.getElementById('spProgressLabel').innerText = `${done} of ${total} tasks done`;
+    document.getElementById('spDaysLabel').innerText = `${spPlan.length} day plan`;
+    document.getElementById('spRingPercentText').innerText = percent + '%';
+
+    const offset = SP_RING_CIRCUMFERENCE - (percent / 100) * SP_RING_CIRCUMFERENCE;
+    document.getElementById('spRingFill').style.strokeDashoffset = offset;
+}
+
+function spResetProgress(){
+    if (!confirm('Reset all progress for this plan?')) return;
+    localStorage.removeItem(spProgressKey());
+    spRenderPlan();
+}
+</script>
+
+</body>
+</html>

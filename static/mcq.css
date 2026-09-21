@@ -1,0 +1,782 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: #f5f5ff;
+    color: #24213b;
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+    width: 280px;
+    min-height: 100vh;
+    background: linear-gradient(
+        180deg,
+        #37318f,
+        #4b3bd4
+    );
+    color: white;
+    padding: 28px;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-size: 36px;
+    margin: 0 0 28px;
+    font-weight: 700;
+}
+
+.tagline {
+    color: #c9c5ff;
+    line-height: 1.6;
+    margin-bottom: 42px;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    color: white;
+    text-decoration: none;
+    padding: 15px 17px;
+    margin-bottom: 8px;
+    border-radius: 13px;
+    font-size: 16px;
+}
+
+.menu-link i {
+    font-size: 18px;
+}
+
+.menu-link:hover {
+    background: rgba(255,255,255,.12);
+}
+
+.menu-link.active {
+    background: white;
+    color: #4d3bd5;
+    font-weight: 600;
+}
+
+
+/* =========================
+   MAIN
+========================= */
+
+.main-content {
+    flex: 1;
+    padding: 42px 42px;
+    min-width: 0;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.page-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.page-label {
+    color: #6547e8;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.page-top h1 {
+    margin: 6px 0 5px;
+    font-size: 38px;
+}
+
+.page-top p {
+    margin: 0;
+    color: #77738f;
+    font-size: 16px;
+}
+
+.back-btn {
+    background: white;
+    border: 1px solid #ddd9ed;
+    border-radius: 13px;
+    padding: 14px 22px;
+    font-size: 15px;
+    color: #45389a;
+    cursor: pointer;
+}
+
+
+/* =========================
+   LAYOUT
+========================= */
+
+.quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 24px;
+}
+
+
+/* =========================
+   QUESTION SECTION
+========================= */
+
+.question-section {
+    background: white;
+    border: 1px solid #e4e0f0;
+    border-radius: 22px;
+    padding: 28px;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 22px;
+}
+
+.question-label {
+    font-size: 13px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #625d78;
+}
+
+.question-header h2 {
+    font-size: 20px;
+    margin: 5px 0 0;
+}
+
+.difficulty {
+    background: #fff4df;
+    color: #c18020;
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* =========================
+   QUESTION CARD
+========================= */
+
+.question-card {
+    background: #f9f7ff;
+    border: 1px solid #ded5ff;
+    border-radius: 18px;
+    padding: 32px;
+}
+
+.question-number {
+    color: #9c95bb;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#questionText {
+    margin: 30px 0 28px;
+    font-size: 25px;
+    line-height: 1.45;
+}
+
+
+/* =========================
+   OPTIONS
+========================= */
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-align: left;
+    background: white;
+    border: 1px solid #ddd9eb;
+    border-radius: 13px;
+    padding: 15px 17px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #3d3952;
+    transition: .2s;
+}
+
+.option:hover {
+    border-color: #7352e9;
+    background: #fbfaff;
+}
+
+.option-letter {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0edff;
+    color: #6748e5;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.option.selected {
+    border-color: #7352e9;
+}
+
+.option.correct {
+    border-color: #55b78c;
+    background: #effaf5;
+}
+
+.option.correct .option-letter {
+    background: #d8f2e6;
+    color: #30936d;
+}
+
+.option.incorrect {
+    border-color: #df7777;
+    background: #fff2f2;
+}
+
+.option.incorrect .option-letter {
+    background: #f8dddd;
+    color: #c44d4d;
+}
+
+
+/* =========================
+   NEXT BUTTON
+========================= */
+
+.question-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.next-btn {
+    border: none;
+    background: #6847e6;
+    color: white;
+    padding: 13px 22px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.next-btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+
+/* =========================
+   PROGRESS
+========================= */
+
+.progress-panel {
+    background: white;
+    border: 1px solid #e4e0f0;
+    border-radius: 22px;
+    padding: 24px;
+    align-self: start;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.progress-header span {
+    color: #6c6681;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.progress-header h3 {
+    margin: 8px 0 0;
+    font-size: 20px;
+}
+
+.progress-header strong {
+    color: #6847e6;
+    font-size: 25px;
+}
+
+
+/* =========================
+   PROGRESS BAR
+========================= */
+
+.progress-bar {
+    height: 8px;
+    background: #ece8f4;
+    border-radius: 10px;
+    margin: 25px 0 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #7655e8;
+    border-radius: 10px;
+    transition: .3s;
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+.stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px;
+    border-radius: 15px;
+}
+
+.stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+}
+
+.stat strong {
+    display: block;
+    font-size: 18px;
+}
+
+.stat span {
+    font-size: 13px;
+}
+
+.correct {
+    background: #effaf5;
+}
+
+.correct .stat-icon {
+    background: #d8f2e6;
+    color: #30936d;
+}
+
+.incorrect {
+    background: #fff2f2;
+}
+
+.incorrect .stat-icon {
+    background: #f8dddd;
+    color: #c44d4d;
+}
+
+.remaining {
+    background: #f7f5fa;
+}
+
+.remaining .stat-icon {
+    background: #ebe8f0;
+    color: #85808f;
+}
+
+
+/* =========================
+   MEMORY TIP
+========================= */
+
+.memory-tip {
+    background: #f7f3ff;
+    border: 1px solid #ddd3ff;
+    border-radius: 15px;
+    padding: 17px;
+    margin-top: 18px;
+}
+
+.tip-title {
+    color: #5738cf;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.memory-tip p {
+    color: #5d5870;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+
+/* =========================
+   RESTART
+========================= */
+
+.restart-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 13px;
+    border: 1px solid #cfc5ff;
+    background: white;
+    color: #5135c9;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer; 
+}
+
+
+/* =========================
+   RESULT
+========================= */
+
+.result-section {
+    background: white;
+    border: 1px solid #e4e0f0;
+    border-radius: 22px;
+    padding: 50px;
+    text-align: center;
+    max-width: 800px;
+    margin: 30px auto;
+}
+
+.result-icon {
+    font-size: 45px;
+}
+
+.result-section h2 {
+    font-size: 30px;
+    margin: 12px 0 5px;
+}
+
+.result-section p {
+    color: #77738f;
+}
+
+.score {
+    margin: 28px 0;
+}
+
+.score strong {
+    display: block;
+    font-size: 38px;
+    color: #5e43d5;
+}
+
+.score span {
+    color: #77738f;
+    font-size: 18px;
+}
+
+.result-stats {
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    margin-bottom: 30px;
+}
+
+.result-stats strong {
+    display: block;
+    font-size: 25px;
+}
+
+.result-stats span {
+    color: #77738f;
+}
+
+.result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.review-btn,
+.try-btn {
+    padding: 13px 20px;
+    border-radius: 11px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.review-btn {
+    background: white;
+    border: 1px solid #cfc5ff;
+    color: #5738cf;
+}
+
+.try-btn {
+    background: #6847e6;
+    border: none;
+    color: white;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+
+    .sidebar {
+        width: 220px;
+    }
+
+    .quiz-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .progress-panel {
+        width: 100%;
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .app-container {
+        display: block;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .main-content {
+        padding: 22px;
+    }
+
+    .page-top {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .result-stats {
+        gap: 30px;
+    }
+
+}
+/* ==============================
+   FINAL MCQ PAGE FIX
+================================ */
+
+.main-content {
+    padding: 28px 34px;
+}
+
+/* Header compact */
+.page-top {
+    margin-bottom: 20px;
+}
+
+.page-top h1 {
+    margin: 0 0 5px;
+    font-size: 34px;
+}
+
+.page-top p {
+    margin: 0;
+}
+
+
+/* Quiz layout */
+.quiz-layout {
+    gap: 20px;
+}
+
+
+/* Question section */
+.question-section {
+    padding: 22px;
+}
+
+.question-header {
+    margin-bottom: 16px;
+}
+
+.question-header h2 {
+    margin-top: 3px;
+    font-size: 19px;
+}
+
+
+/* Question card */
+.question-card {
+    padding: 22px;
+}
+
+#questionText {
+    margin: 18px 0 20px;
+    font-size: 22px;
+    line-height: 1.35;
+}
+
+
+/* Options */
+.options {
+    gap: 9px;
+}
+
+.option {
+    padding: 11px 14px;
+    min-height: 54px;
+}
+
+.option-letter {
+    width: 30px;
+    height: 30px;
+}
+
+
+/* Next button */
+.question-actions {
+    margin-top: 16px;
+}
+
+.next-btn {
+    padding: 11px 20px;
+}
+
+
+/* Right progress card */
+.progress-panel {
+    padding: 20px;
+}
+
+.progress-bar {
+    margin: 18px 0 16px;
+}
+
+.stat {
+    padding: 12px;
+}
+
+.stat-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.memory-tip {
+    margin-top: 14px;
+    padding: 14px;
+}
+
+.restart-btn {
+    margin-top: 12px;
+    padding: 11px;
+}
+
+
+/* Back button */
+.back-btn {
+    padding: 11px 18px;
+}
+
+
+/* Keep everything visible */
+@media (min-height: 800px) {
+
+    .main-content {
+        padding-top: 24px;
+    }
+
+    .question-card {
+        padding: 20px 22px;
+    }
+
+    #questionText {
+        margin: 15px 0;
+    }
+
+    .option {
+        padding: 10px 14px;
+    }
+}
+.main-content {
+    padding: 55px 40px 40px;
+}
+/* Main quiz card */
+.mcq-card {
+    padding: 28px 30px;
+}
+
+/* Question area */
+.mcq-question-box {
+    min-height: 0;
+    height: auto;
+    padding: 28px 34px 30px;
+}
+
+/* Question text */
+.mcq-question {
+    margin: 25px 0 24px;
+    font-size: 25px;
+    line-height: 1.4;
+}
+
+/* Options */
+.mcq-option {
+    min-height: 58px;
+    margin-bottom: 12px;
+    padding: 10px 16px;
+}
+
+/* Last option ke baad extra space nahi */
+.mcq-option:last-child {
+    margin-bottom: 0;
+}
+
+/* Next button */
+.next-question {
+    margin-top: 18px;
+}
+.mcq-question-box {
+    min-height: 430px;
+}
+.progress-sidebar {
+    margin-top: 28px;
+}
+.quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr);
+    gap: 24px;
+    align-items: stretch;
+}
+
+/* dono outer cards same height */
+.quiz-layout > * {
+    height: 100%;
+    box-sizing: border-box;
+    margin-top: 0 !important;
+}

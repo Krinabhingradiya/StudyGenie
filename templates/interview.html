@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyGenie | AI Interview Coach </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+      .content{ max-width:none !important; width:100% !important; }
+
+      /* ===== Compact mode: shrink spacing so it fits in one screen ===== */
+      .ic-topbar{ margin-bottom:12px !important; }
+      .ic-card{ padding:16px !important; margin-bottom:12px !important; }
+      .ic-card-head{ margin-bottom:10px !important; }
+      .ic-q-bubble{ margin:8px 0 12px !important; padding:12px 14px !important; }
+      .ic-answer-box{ min-height:80px !important; }
+      .ic-answer-actions{ margin-top:10px !important; }
+      .ic-progress-body{ gap:14px !important; }
+      .ic-ring{ width:76px !important; height:76px !important; }
+      .ic-ring-inner{ width:58px !important; height:58px !important; font-size:14px !important; }
+      .ic-encourage{ margin-top:10px !important; padding:8px 12px !important; }
+      .ic-quote-box{ padding:10px 16px !important; }
+      .ic-title{ font-size:22px !important; }
+      .ic-title-icon{ width:42px !important; height:42px !important; }
+      .ic-feedback-block{ margin-top:10px !important; }
+      .ic-confidence-row{ margin-top:12px !important; }
+
+      /* ===== Top bar ===== */
+      .ic-topbar{ display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:22px; flex-wrap:wrap; }
+      .ic-title-row{ display:flex; align-items:center; gap:16px; }
+      .ic-title-icon{
+        width:52px; height:52px; border-radius:16px; background:#ece6ff;
+        display:flex; align-items:center; justify-content:center; font-size:22px; color:#674de1; flex-shrink:0;
+      }
+      .ic-title{ font-size:26px; font-weight:700; margin:0; color:#2d2a3e; }
+      .ic-subtitle{ font-size:13.5px; color:#858192; margin:2px 0 0; }
+
+      .ic-quote-box{
+        background:#ece6ff; border-radius:16px; padding:14px 20px; display:flex; align-items:center; gap:12px;
+        color:#5a4bb8; font-weight:600; font-size:13.5px; max-width:320px;
+      }
+      .ic-quote-box i{ font-size:20px; opacity:.6; }
+
+      /* ===== Section card shell ===== */
+      .ic-card{
+        background:#fff; border:1px solid #e8e5ef; border-radius:20px; padding:26px;
+        box-shadow:0 8px 30px rgba(54,44,90,0.04); margin-bottom:20px;
+      }
+      .ic-card-head{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+      .ic-step-num{
+        display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+        width:26px; height:26px; border-radius:50%; background:#674de1; color:#fff;
+        font-size:12.5px; font-weight:700;
+      }
+      .ic-card-head h4{ font-size:17px; font-weight:700; margin:0; color:#2d2a3e; }
+      .ic-card-head p{ font-size:12.5px; color:#858192; margin:2px 0 0; }
+
+      /* ===== Setup fields row ===== */
+      .ic-fields-row{ display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; }
+      .ic-field{ flex:1; min-width:180px; }
+      .ic-field label{ font-size:11.5px; font-weight:700; color:#5a5670; text-transform:uppercase; letter-spacing:.03em; margin-bottom:7px; display:block; }
+      .ic-field-wrap{ position:relative; }
+      .ic-field-wrap i.ic-field-icon{
+        position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#674de1; font-size:14px; pointer-events:none;
+      }
+      .ic-field select, .ic-field input[type=text]{
+        width:100%; padding:11px 14px 11px 38px; border:1.5px solid #e3e0eb; border-radius:12px;
+        font-size:13.5px; color:#2d2a3e; appearance:none; background:#fff;
+      }
+      .ic-field select:focus, .ic-field input:focus{ outline:none; border-color:#a18af8; }
+      .ic-field-wrap i.ic-chevron{
+        position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#a19dab; font-size:11px; pointer-events:none;
+      }
+
+      .ic-generate-btn{
+        background:#674de1; color:#fff; border:none; padding:11px 22px; border-radius:12px;
+        font-weight:700; font-size:13.5px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:8px;
+      }
+      .ic-generate-btn:hover{ background:#5a3fd0; }
+      .ic-generate-btn:disabled{ opacity:.5; cursor:not-allowed; }
+      .ic-generate-hint{ font-size:11px; color:#a19dab; margin-top:8px; }
+
+      /* ===== Player layout ===== */
+      .ic-player{ display:none; }
+      .ic-player-grid{ display:grid; grid-template-columns:1.6fr 1fr; gap:20px; align-items:start; }
+
+      .ic-q-head-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+      .ic-q-nav{ display:flex; align-items:center; gap:8px; }
+      .ic-round-btn{
+        width:32px; height:32px; border-radius:50%; border:1.5px solid #e3e0eb; background:#fff; color:#5a5670;
+        display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px;
+      }
+      .ic-round-btn:hover:not(:disabled){ border-color:#a18af8; color:#674de1; }
+      .ic-round-btn:disabled{ opacity:.35; cursor:not-allowed; }
+
+      .ic-q-bubble{
+        background:#f6f4fc; border-radius:16px; padding:18px 20px; margin:14px 0 22px; display:flex; gap:12px; align-items:flex-start;
+      }
+      .ic-q-bubble-icon{
+        width:34px; height:34px; border-radius:10px; background:#674de1; color:#fff; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:14px;
+      }
+      .ic-q-bubble-label{ font-size:11.5px; font-weight:700; color:#674de1; text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px; }
+      .ic-q-bubble-text{ font-size:16.5px; font-weight:600; color:#2d2a3e; line-height:1.4; }
+
+      .ic-answer-label{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:#5a5670; margin-bottom:8px; }
+      .ic-answer-wrap{ position:relative; }
+      .ic-answer-box{
+        width:100%; min-height:130px; border:1.5px solid #e3e0eb; border-radius:14px;
+        padding:14px 16px; font-size:14px; color:#2d2a3e; font-family:inherit; resize:vertical;
+      }
+      .ic-answer-box:focus{ outline:none; border-color:#a18af8; }
+      .ic-char-count{ position:absolute; right:14px; bottom:10px; font-size:11px; color:#a19dab; }
+
+      .ic-answer-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:12px; flex-wrap:wrap; }
+      .ic-mic-btn{
+        border:1.5px solid #d8cff8; background:#fff; color:#674de1; border-radius:10px;
+        padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px;
+      }
+      .ic-mic-btn:hover{ background:#f6f4fc; }
+      .ic-mic-btn.recording{ background:#674de1; color:#fff; }
+      .ic-submit-btn{
+        background:#674de1; color:#fff; border:none; padding:11px 24px;
+        border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; display:flex; align-items:center; gap:8px;
+      }
+      .ic-submit-btn:hover{ background:#5a3fd0; }
+      .ic-submit-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+      /* ===== Tips card ===== */
+      .ic-tips-card{ display:flex; gap:22px; align-items:center; }
+      .ic-tips-card ul{ margin:0; padding-left:18px; flex:1; }
+      .ic-tips-card li{ font-size:13.5px; color:#2d2a3e; margin-bottom:8px; line-height:1.4; }
+      .ic-tips-illustration{
+        width:110px; height:110px; border-radius:50%; background:#ece6ff; color:#674de1;
+        display:flex; align-items:center; justify-content:center; font-size:44px; flex-shrink:0;
+      }
+
+      /* ===== Progress card ===== */
+      .ic-progress-body{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+      .ic-ring{
+        width:96px; height:96px; border-radius:50%; flex-shrink:0;
+        background:conic-gradient(#674de1 calc(var(--pct,0) * 1%), #ece6ff 0);
+        display:flex; align-items:center; justify-content:center;
+      }
+      .ic-ring-inner{
+        width:74px; height:74px; border-radius:50%; background:#fff;
+        display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#2d2a3e;
+      }
+      .ic-stats-list{ flex:1; min-width:170px; display:flex; flex-direction:column; gap:9px; }
+      .ic-stat-row{ display:flex; justify-content:space-between; font-size:12.5px; color:#5a5670; }
+      .ic-stat-row strong{ color:#2d2a3e; font-size:13px; }
+
+      .ic-encourage{
+        margin-top:16px; background:#e9f8f0; color:#1b9c6e; border-radius:12px; padding:11px 14px;
+        font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:8px;
+      }
+
+      /* ===== AI Feedback card ===== */
+      .ic-feedback-head{ display:flex; justify-content:space-between; align-items:center; }
+      .ic-score-badge{ background:#eef2ff; color:#4f46e5; font-weight:800; font-size:15px; padding:5px 14px; border-radius:20px; }
+      .ic-feedback-empty{ font-size:13px; color:#a19dab; text-align:center; padding:16px 8px; }
+
+      .ic-feedback-block{ margin-top:16px; }
+      .ic-feedback-block h6{ font-size:12px; font-weight:700; color:#5a5670; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+      .ic-feedback-block ul{ margin:0; padding:0; list-style:none; }
+      .ic-feedback-block li{ font-size:12.5px; color:#2d2a3e; margin-bottom:6px; line-height:1.4; display:flex; gap:8px; padding:8px 10px; border-radius:10px; }
+      .ic-feedback-block.strengths li{ background:#eafaf1; }
+      .ic-feedback-block.improve li{ background:#fdecec; }
+      .ic-feedback-block.suggest li{ background:#eaf2ff; }
+      .ic-feedback-block li i{ font-size:13px; margin-top:1px; flex-shrink:0; }
+      .ic-feedback-block.strengths i{ color:#1b9c6e; }
+      .ic-feedback-block.improve i{ color:#e15252; }
+      .ic-feedback-block.suggest i{ color:#3b82f6; }
+
+      .ic-confidence-row{ margin-top:18px; }
+      .ic-confidence-row .lbl{ font-size:12px; font-weight:700; color:#5a5670; margin-bottom:8px; display:flex; justify-content:space-between; }
+      .ic-conf-bars{ display:flex; gap:4px; }
+      .ic-conf-bars span{ flex:1; height:8px; border-radius:4px; background:#ece6ff; }
+      .ic-conf-bars span.filled{ background:#674de1; }
+
+      /* ===== Completion screen ===== */
+      .ic-complete{ display:none; text-align:center; padding:50px 20px; }
+      .ic-complete i{ font-size:44px; color:#674de1; }
+      .ic-complete h3{ margin:16px 0 6px; font-weight:700; }
+      .ic-complete p{ color:#858192; margin-bottom:22px; }
+
+      @media (max-width:960px){
+        .ic-player-grid{ grid-template-columns:1fr; }
+        .ic-fields-row{ flex-direction:column; align-items:stretch; }
+        .ic-tips-card{ flex-direction:column; }
+      }
+    </style>
+</head>
+
+<body>
+
+<div class="d-flex">
+
+    <div class="sidebar">
+        <h4 class="logo">StudyGenie</h4>
+        <p class="text-white-50 small mb-4">AI-Powered Smart Learning Assistant</p>
+
+        <a href="/dashboard" class="menu-link"><i class="bi bi-grid-fill me-2"></i> Dashboard</a>
+        <a href="/documents" class="menu-link"><i class="bi bi-folder2-open me-2"></i> My Documents</a>
+        <a href="/chat" class="menu-link"><i class="bi bi-chat-dots me-2"></i> Chat With Notes</a>
+        <a href="/quiz" class="menu-link"><i class="bi bi-patch-question me-2"></i> Quiz Generator</a>
+        <a href="{{ url_for('study_planner') }}" class="menu-link"><i class="bi bi-calendar-check me-2"></i> Study Planner</a>
+        <a href="/interview" class="menu-link"><i class="bi bi-mic-fill me-2"></i> Interview Prep</a>
+        <a href="/logout" class="menu-link"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+    </div>
+
+    <main class="content">
+
+        <!-- ===== Top bar ===== -->
+        <div class="ic-topbar">
+            <div class="ic-title-row">
+                <div class="ic-title-icon"><i class="bi bi-mic-fill"></i></div>
+                <div>
+                    <h1 class="ic-title">Interview Prep</h1>
+                    <p class="ic-subtitle">Practice interviews and receive AI-powered feedback to improve your career readiness.</p>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <button onclick="window.location.href='/dashboard'"
+                    style="border:1px solid #e3e0eb; background:#fff; color:#5a5670; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer;">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </button>
+
+                <div class="ic-quote-box">
+                    <i class="bi bi-quote"></i>
+                    <span>"Better preparation leads to greater opportunities."</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Setup card ===== -->
+        <div class="ic-card" id="icSetupCard">
+            <div class="ic-card-head">
+                <span class="ic-step-num">1</span>
+                <div>
+                    <h4>Configure Your Interview</h4>
+                    <p>Select your preferences to get tailored questions</p>
+                </div>
+            </div>
+
+            <div class="ic-fields-row">
+
+                <div class="ic-field">
+                    <label>Interview Type</label>
+                    <div class="ic-field-wrap">
+                        <i class="bi bi-code-slash ic-field-icon"></i>
+                        <select id="icTypeSelect" onchange="icSelections.type=this.value">
+                            <option value="Technical Interview" selected>Technical Interview</option>
+                            <option value="HR Interview">HR Interview</option>
+                            <option value="Project Viva">Project Viva</option>
+                        </select>
+                        <i class="bi bi-chevron-down ic-chevron"></i>
+                    </div>
+                </div>
+
+                <div class="ic-field">
+                    <label>Branch / Field</label>
+                    <div class="ic-field-wrap">
+                        <i class="bi bi-mortarboard ic-field-icon"></i>
+                        <select id="icBranchSelect" onchange="icBranchChanged()">
+                            <optgroup label="Engineering">
+                                <option value="Computer Engineering" selected>Computer Engineering</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="AI & ML">AI & ML</option>
+                                <option value="Data Science">Data Science</option>
+                                <option value="Electronics & Communication">Electronics & Communication</option>
+                                <option value="Electrical Engineering">Electrical Engineering</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                            </optgroup>
+                            <optgroup label="Science">
+                                <option value="Biology / Life Sciences">Biology / Life Sciences</option>
+                                <option value="Biotechnology">Biotechnology</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Pharmacy">Pharmacy</option>
+                            </optgroup>
+                            <optgroup label="Commerce & Management">
+                                <option value="Commerce / B.Com">Commerce / B.Com</option>
+                                <option value="Business Administration / BBA / MBA">Business Administration / BBA / MBA</option>
+                                <option value="Finance">Finance</option>
+                            </optgroup>
+                            <optgroup label="Arts & Other">
+                                <option value="Arts / Humanities">Arts / Humanities</option>
+                                <option value="Law">Law</option>
+                                <option value="Other">Other (type below)</option>
+                            </optgroup>
+                        </select>
+                        <i class="bi bi-chevron-down ic-chevron"></i>
+                    </div>
+                    <input type="text" id="icBranchOther" placeholder="Type your branch/field"
+                           style="display:none; margin-top:8px;"
+                           oninput="icSelections.branch = this.value;">
+                </div>
+
+                <div class="ic-field">
+                    <label>Experience Level</label>
+                    <div class="ic-field-wrap">
+                        <i class="bi bi-person-badge ic-field-icon"></i>
+                        <select id="icExpSelect" onchange="icSelections.experience=this.value">
+                            <option value="Fresher" selected>Fresher</option>
+                            <option value="Internship">Internship</option>
+                            <option value="Campus Placement">Campus Placement</option>
+                        </select>
+                        <i class="bi bi-chevron-down ic-chevron"></i>
+                    </div>
+                </div>
+
+                <div class="ic-field">
+                    <label>Interview Source</label>
+                    <div class="ic-field-wrap">
+                        <i class="bi bi-collection ic-field-icon"></i>
+                        <select id="icSourceSelect" onchange="icSourceChanged(this.value)">
+                            <option value="Placement Interview" selected>Placement Interview</option>
+                            <option value="From Uploaded Notes">From Uploaded Notes</option>
+                        </select>
+                        <i class="bi bi-chevron-down ic-chevron"></i>
+                    </div>
+                </div>
+
+                <button class="ic-generate-btn" id="icGenerateBtn" onclick="icGenerate()">
+                    <i class="bi bi-stars"></i> Generate Interview
+                </button>
+
+            </div>
+
+            <div class="ic-field" id="icFileGroup" style="display:none; margin-top:16px; max-width:340px;">
+                <label>Study Material</label>
+                <div class="ic-field-wrap">
+                    <i class="bi bi-file-earmark-text ic-field-icon"></i>
+                    <select id="icFileSelect">
+                        <option value="">Select a document</option>
+                        {% for file in files %}
+                        <option value="{{ file }}">{{ file }}</option>
+                        {% endfor %}
+                    </select>
+                    <i class="bi bi-chevron-down ic-chevron"></i>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== Interview player ===== -->
+        <div class="ic-player" id="icPlayer">
+            <div class="ic-player-grid">
+
+                <div>
+                    <!-- Interview Session -->
+                    <div class="ic-card">
+                        <div class="ic-card-head" style="margin-bottom:0;">
+                            <span class="ic-step-num">2</span>
+                            <div style="flex:1;">
+                                <h4>Interview Session</h4>
+                            </div>
+                        </div>
+
+                        <div class="ic-q-head-row" style="margin-top:6px;">
+                            <span></span>
+                            <div class="ic-q-nav">
+                                <span id="icQCount" style="font-size:13.5px; font-weight:700; color:#2d2a3e; margin-right:6px;">Question 1 of 10</span>
+                                <button class="ic-round-btn" id="icPrevBtn" onclick="icPrev()"><i class="bi bi-chevron-left"></i></button>
+                                <button class="ic-round-btn" id="icNextBtn" onclick="icNext()" disabled><i class="bi bi-chevron-right"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="ic-q-bubble">
+                            <div class="ic-q-bubble-icon"><i class="bi bi-chat-left-text"></i></div>
+                            <div>
+                                <div class="ic-q-bubble-label">Question</div>
+                                <div class="ic-q-bubble-text" id="icQText"></div>
+                            </div>
+                        </div>
+
+                        <div class="ic-answer-label"><i class="bi bi-pencil"></i> Your Answer</div>
+                        <div class="ic-answer-wrap">
+                            <textarea class="ic-answer-box" id="icAnswerBox" maxlength="1000"
+                                placeholder="Type your answer here..." oninput="icUpdateCharCount()"></textarea>
+                            <span class="ic-char-count" id="icCharCount">0/1000</span>
+                        </div>
+
+                        <div class="ic-answer-actions">
+                            <button class="ic-mic-btn" id="icMicBtn" onclick="icToggleRecording()">
+                                <i class="bi bi-mic"></i> Record Answer (Optional)
+                            </button>
+                            <button class="ic-submit-btn" id="icSubmitBtn" onclick="icSubmitAnswer()">
+                                <i class="bi bi-send"></i> Submit Answer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <!-- Progress -->
+                    <div class="ic-card">
+                        <div class="ic-card-head">
+                            <span class="ic-step-num" style="background:#4f46e5;"><i class="bi bi-bar-chart-fill" style="font-size:11px;"></i></span>
+                            <h4>Your Progress</h4>
+                        </div>
+
+                        <div class="ic-progress-body">
+                            <div class="ic-ring" id="icRing" style="--pct:0;">
+                                <div class="ic-ring-inner"><span id="icRingPct">0%</span></div>
+                            </div>
+                            <div class="ic-stats-list">
+                                <div class="ic-stat-row"><span>Questions Completed</span><strong id="icQCompleted">0 / 10</strong></div>
+                                <div class="ic-stat-row"><span>Average Score</span><strong id="icAvgScoreStat">-- / 10</strong></div>
+                                <div class="ic-stat-row"><span>Best Score</span><strong id="icBestScore">-- / 10</strong></div>
+                                <div class="ic-stat-row"><span>Current Streak</span><strong id="icStreak">0</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="ic-encourage">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Keep going! Consistency leads to success.</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Feedback -->
+                    <div class="ic-card">
+                        <div class="ic-feedback-head">
+                            <div class="ic-card-head" style="margin-bottom:0;">
+                                <span class="ic-step-num" style="background:#674de1;"><i class="bi bi-robot" style="font-size:11px;"></i></span>
+                                <h4>AI Feedback</h4>
+                            </div>
+                            <span class="ic-score-badge" id="icScoreBadge" style="display:none;">-- / 10</span>
+                        </div>
+
+                        <div id="icFeedbackEmpty" class="ic-feedback-empty">
+                            Submit an answer to see AI feedback here.
+                        </div>
+
+                        <div id="icFeedbackBody" style="display:none;">
+
+                            <div class="ic-feedback-block strengths">
+                                <h6><i class="bi bi-check-circle"></i> Strengths</h6>
+                                <ul id="icStrengthsList"></ul>
+                            </div>
+
+                            <div class="ic-feedback-block improve">
+                                <h6><i class="bi bi-exclamation-triangle"></i> Areas to Improve</h6>
+                                <ul id="icImprovementsList"></ul>
+                            </div>
+
+                            <div class="ic-feedback-block suggest" id="icSuggestBlock" style="display:none;">
+                                <h6><i class="bi bi-lightbulb"></i> Suggestions</h6>
+                                <ul id="icSuggestList"></ul>
+                            </div>
+
+                            <div class="ic-confidence-row">
+                                <div class="lbl"><span>Confidence Level</span><span id="icConfLabel">--</span></div>
+                                <div class="ic-conf-bars" id="icConfBars"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===== Completion screen ===== -->
+        <div class="ic-complete" id="icComplete">
+            <i class="bi bi-trophy-fill"></i>
+            <h3>Interview Complete!</h3>
+            <p id="icCompleteSub">You answered all 10 questions.</p>
+            <button class="ic-generate-btn" style="max-width:260px; margin:0 auto;" onclick="icRestart()">
+                <i class="bi bi-arrow-repeat me-1"></i> Start New Interview
+            </button>
+        </div>
+
+    </main>
+</div>
+
+<script>
+let icSelections = { type: "Technical Interview", branch: "Computer Engineering", experience: "Fresher", source: "Placement Interview" };
+let icQuestions = [];
+let icAnswers = {};   // { qIndex: { answer, feedback } }
+let icCurrentIndex = 0;
+let icRecognition = null;
+let icRecording = false;
+
+function icBranchChanged(){
+    const select = document.getElementById('icBranchSelect');
+    const otherInput = document.getElementById('icBranchOther');
+
+    if (select.value === 'Other') {
+        otherInput.style.display = 'block';
+        icSelections.branch = otherInput.value || '';
+    } else {
+        otherInput.style.display = 'none';
+        icSelections.branch = select.value;
+    }
+}
+
+function icSourceChanged(value){
+    icSelections.source = value;
+    document.getElementById('icFileGroup').style.display =
+        value === 'From Uploaded Notes' ? 'block' : 'none';
+}
+
+function icUpdateCharCount(){
+    const box = document.getElementById('icAnswerBox');
+    document.getElementById('icCharCount').innerText = box.value.length + '/1000';
+}
+
+/* ===== Optional voice input via browser Speech Recognition ===== */
+function icToggleRecording(){
+    const btn = document.getElementById('icMicBtn');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        alert('Voice input is not supported in this browser. Please type your answer instead.');
+        return;
+    }
+
+    if (icRecording) {
+        icRecognition.stop();
+        return;
+    }
+
+    icRecognition = new SpeechRecognition();
+    icRecognition.lang = 'en-US';
+    icRecognition.interimResults = false;
+    icRecognition.continuous = true;
+
+    icRecognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+        const box = document.getElementById('icAnswerBox');
+        box.value = (box.value + ' ' + transcript).trim();
+        icUpdateCharCount();
+    };
+
+    icRecognition.onend = () => {
+        icRecording = false;
+        btn.classList.remove('recording');
+        btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer (Optional)';
+    };
+
+    icRecognition.start();
+    icRecording = true;
+    btn.classList.add('recording');
+    btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Recording';
+}
+
+async function icGenerate(){
+    const btn = document.getElementById('icGenerateBtn');
+    const fileVal = document.getElementById('icFileSelect') ? document.getElementById('icFileSelect').value : '';
+
+    if (icSelections.source === 'From Uploaded Notes' && !fileVal) {
+        alert('Please select a document, or switch source to Placement Interview.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+
+    try {
+        const params = new URLSearchParams({
+            type: icSelections.type,
+            branch: icSelections.branch,
+            experience: icSelections.experience,
+            source: icSelections.source,
+            file: fileVal
+        });
+
+        const res = await fetch('/generate-interview-questions?' + params.toString());
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || 'Could not generate the interview. Please try again.');
+            return;
+        }
+
+        icQuestions = data.questions;
+        icAnswers = {};
+        icCurrentIndex = 0;
+
+        document.getElementById('icComplete').style.display = 'none';
+        document.getElementById('icPlayer').style.display = 'block';
+
+        icShowQuestion(0);
+        icUpdateProgress();
+
+        // Setup card stays visible — just scroll down to the newly revealed session
+        document.getElementById('icPlayer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (e) {
+        alert('Could not reach the server. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars"></i> Generate Interview';
+    }
+}
+
+function icShowQuestion(index){
+    icCurrentIndex = index;
+    document.getElementById('icQCount').innerText = `Question ${index + 1} of ${icQuestions.length}`;
+    document.getElementById('icQText').innerText = icQuestions[index];
+
+    const existing = icAnswers[index];
+    const box = document.getElementById('icAnswerBox');
+    box.value = existing ? existing.answer : '';
+    box.disabled = !!existing;
+    icUpdateCharCount();
+
+    document.getElementById('icSubmitBtn').style.display = existing ? 'none' : 'flex';
+    document.getElementById('icMicBtn').style.display = existing ? 'none' : 'flex';
+
+    if (existing) {
+        icShowFeedback(existing.feedback);
+    } else {
+        icClearFeedback();
+    }
+
+    document.getElementById('icPrevBtn').disabled = index === 0;
+    document.getElementById('icNextBtn').disabled = !existing;
+}
+
+async function icSubmitAnswer(){
+    const answer = document.getElementById('icAnswerBox').value.trim();
+    if (!answer) {
+        alert('Please write an answer first.');
+        return;
+    }
+
+    const btn = document.getElementById('icSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Evaluating...';
+
+    try {
+        const res = await fetch('/evaluate-interview-answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                question: icQuestions[icCurrentIndex],
+                answer: answer,
+                type: icSelections.type
+            })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || 'Could not evaluate your answer.');
+            return;
+        }
+
+        icAnswers[icCurrentIndex] = { answer: answer, feedback: data.feedback };
+        document.getElementById('icAnswerBox').disabled = true;
+        btn.style.display = 'none';
+        document.getElementById('icMicBtn').style.display = 'none';
+        icShowFeedback(data.feedback);
+        document.getElementById('icNextBtn').disabled = false;
+        icUpdateProgress();
+
+    } catch (e) {
+        alert('Could not reach the server. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send"></i> Submit Answer';
+    }
+}
+
+function icClearFeedback(){
+    document.getElementById('icScoreBadge').style.display = 'none';
+    document.getElementById('icFeedbackEmpty').style.display = 'block';
+    document.getElementById('icFeedbackBody').style.display = 'none';
+}
+
+function icShowFeedback(feedback){
+    document.getElementById('icFeedbackEmpty').style.display = 'none';
+    document.getElementById('icFeedbackBody').style.display = 'block';
+
+    const badge = document.getElementById('icScoreBadge');
+    badge.style.display = 'inline-block';
+    badge.innerText = `${feedback.score} / 10`;
+
+    document.getElementById('icStrengthsList').innerHTML =
+        (feedback.strengths || []).map(s => `<li><i class="bi bi-check-lg"></i>${s}</li>`).join('');
+    document.getElementById('icImprovementsList').innerHTML =
+        (feedback.improvements || []).map(s => `<li><i class="bi bi-exclamation-circle"></i>${s}</li>`).join('');
+
+    const suggestBlock = document.getElementById('icSuggestBlock');
+    if (feedback.suggestions && feedback.suggestions.length) {
+        suggestBlock.style.display = 'block';
+        document.getElementById('icSuggestList').innerHTML =
+            feedback.suggestions.map(s => `<li><i class="bi bi-info-circle"></i>${s}</li>`).join('');
+    } else {
+        suggestBlock.style.display = 'none';
+    }
+
+    const confidence = feedback.confidence || 'Average';
+    document.getElementById('icConfLabel').innerText = `${confidence} (${feedback.score * 10}%)`;
+
+    const filledBars = Math.round((feedback.score / 10) * 10);
+    const barsHtml = Array.from({ length: 10 }, (_, i) =>
+        `<span class="${i < filledBars ? 'filled' : ''}"></span>`
+    ).join('');
+    document.getElementById('icConfBars').innerHTML = barsHtml;
+}
+
+function icNext(){
+    if (icCurrentIndex === icQuestions.length - 1) {
+        icFinish();
+        return;
+    }
+    icShowQuestion(icCurrentIndex + 1);
+}
+
+function icPrev(){
+    if (icCurrentIndex > 0) icShowQuestion(icCurrentIndex - 1);
+}
+
+function icUpdateProgress(){
+    const answeredCount = Object.keys(icAnswers).length;
+    const total = icQuestions.length || 10;
+    const percent = Math.round((answeredCount / total) * 100);
+
+    document.getElementById('icRing').style.setProperty('--pct', percent);
+    document.getElementById('icRingPct').innerText = percent + '%';
+    document.getElementById('icQCompleted').innerText = `${answeredCount} / ${total}`;
+
+    if (answeredCount > 0) {
+        const scores = Object.values(icAnswers).map(a => a.feedback.score);
+        const avg = scores.reduce((sum, s) => sum + s, 0) / scores.length;
+        const best = Math.max(...scores);
+
+        document.getElementById('icAvgScoreStat').innerText = avg.toFixed(1) + ' / 10';
+        document.getElementById('icBestScore').innerText = best.toFixed(1) + ' / 10';
+
+        // "Streak" = consecutive most-recently-answered questions from the current point backward
+        let streak = 0;
+        for (let i = icCurrentIndex; i >= 0; i--) {
+            if (icAnswers[i]) streak++;
+            else break;
+        }
+        document.getElementById('icStreak').innerText = streak;
+    } else {
+        document.getElementById('icAvgScoreStat').innerText = '-- / 10';
+        document.getElementById('icBestScore').innerText = '-- / 10';
+        document.getElementById('icStreak').innerText = '0';
+    }
+}
+
+function icFinish(){
+    document.getElementById('icPlayer').style.display = 'none';
+    document.getElementById('icComplete').style.display = 'block';
+
+    const answeredCount = Object.keys(icAnswers).length;
+    const avg = answeredCount > 0
+        ? (Object.values(icAnswers).reduce((sum, a) => sum + a.feedback.score, 0) / answeredCount).toFixed(1)
+        : '0';
+    document.getElementById('icCompleteSub').innerText =
+        `You answered ${answeredCount} of ${icQuestions.length} questions — average score ${avg}/10.`;
+}
+
+function icRestart(){
+    document.getElementById('icComplete').style.display = 'none';
+    document.getElementById('icSetupCard').style.display = 'block';
+}
+</script>
+
+</body>
+</html>

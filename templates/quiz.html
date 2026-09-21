@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Quiz Generator - StudyGenie</title>
+
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+    <!-- Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+
+    <!-- Main CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+
+    <!-- Quiz Generator CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='quiz.css') }}">
+
+</head>
+
+
+<body>
+
+
+<div class="app-container">
+
+
+    <!-- ========================= -->
+    <!-- SIDEBAR -->
+    <!-- ========================= -->
+
+    <div class="sidebar">
+
+        <h4 class="logo">
+            StudyGenie
+        </h4>
+
+
+        <p class="text-white-50 small mb-4">
+            AI-Powered Smart Learning Assistant
+        </p>
+
+
+        <a href="/dashboard"
+           class="menu-link">
+
+            <i class="bi bi-grid-fill me-2"></i>
+            Dashboard
+
+        </a>
+
+
+        <a href="/documents"
+           class="menu-link">
+
+            <i class="bi bi-folder2-open me-2"></i>
+            My Documents
+
+        </a>
+
+
+        <a href="/chat"
+           class="menu-link">
+
+            <i class="bi bi-chat-dots me-2"></i>
+            Chat With Notes
+
+        </a>
+
+
+        <a href="{{ url_for('quiz') }}"
+           class="menu-link active">
+            <i class="bi bi-card-checklist me-2"></i>
+            Quiz Generator
+
+        </a>
+
+
+        <a href="{{ url_for('study_planner') }}" class="menu-link">
+            <i class="bi bi-calendar-check me-2"></i>
+            Study Planner
+
+        </a>
+
+        <a href="/interview" class="menu-link">
+            <i class="bi bi-person-workspace me-2"></i> Interview Prep
+        </a>
+
+
+        <a href="/logout"
+           class="menu-link">
+            <i class="bi bi-box-arrow-right me-2"></i>
+            Logout
+
+        </a>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- MAIN CONTENT -->
+    <!-- ========================= -->
+
+    <main class="main-content">
+
+
+        <div class="quiz-generator">
+
+
+            <!-- ========================= -->
+            <!-- HEADER -->
+            <!-- ========================= -->
+
+            <div class="generator-header">
+
+                <div>
+
+                    <h1>
+                        Quiz Generator
+                    </h1>
+
+
+                    <p>
+                        Create a personalized quiz from your study material.
+                    </p>
+
+                </div>
+
+
+                <a href="/dashboard"
+                   class="back-btn">
+
+                    ← Back to Dashboard
+
+                </a>
+
+            </div>
+
+
+
+            <!-- ========================= -->
+            <!-- STUDY MATERIAL -->
+            <!-- ========================= -->
+
+            <div class="generator-card">
+
+
+                <div class="section-heading">
+
+                    <div class="section-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+                            Study Material
+                        </h2>
+
+
+                        <p>
+                            Select the file you want to generate a quiz from.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="file-selector">
+
+    <select id="fileSelect">
+
+        <option value="">
+            Select a PDF
+        </option>
+
+        {% for file in files %}
+
+        <option value="{{ file }}">
+            {{ file }}
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+</div>
+
+            </div>
+
+
+
+            <!-- ========================= -->
+            <!-- QUIZ TYPE -->
+            <!-- ========================= -->
+
+            <div class="generator-card">
+
+
+                <div class="section-heading">
+
+
+                    <div class="section-icon">
+                        <i class="bi bi-stars"></i>
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+                            Quiz Type
+                        </h2>
+
+
+                        <p>
+                            Choose how you want to test your knowledge.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="quiz-types">
+
+
+                    <!-- FLASHCARD -->
+
+                    <label class="quiz-type selected">
+
+
+                        <input
+                            type="radio"
+                            name="quizType"
+                            value="flashcard"
+                            checked
+                        >
+
+
+                        <div class="type-check">
+                            <i class="bi bi-check"></i>
+                        </div>
+
+
+                        <div class="type-icon">
+
+                            <i class="bi bi-bookmark-star"></i>
+
+                        </div>
+
+
+                        <div class="type-content">
+
+                            <h3>
+                                Flashcard Quiz
+                            </h3>
+
+
+                            <p>
+                                Learn and revise concepts using
+                                interactive flashcards.
+                            </p>
+
+                        </div>
+
+                    </label>
+
+
+
+                    <!-- MCQ -->
+
+                    <label class="quiz-type">
+
+
+                        <input
+                            type="radio"
+                            name="quizType"
+                            value="mcq"
+                        >
+
+
+                        <div class="type-check">
+                            <i class="bi bi-check"></i>
+                        </div>
+
+
+                        <div class="type-icon">
+
+                            <i class="bi bi-ui-checks-grid"></i>
+
+                        </div>
+
+
+                        <div class="type-content">
+
+                            <h3>
+                                Multiple Choice Quiz
+                            </h3>
+
+
+                            <p>
+                                Test your understanding with
+                                exam-style multiple choice questions.
+                            </p>
+
+                        </div>
+
+                    </label>
+
+
+                </div>
+
+
+
+                <!-- GENERATE BUTTON -->
+
+                <button
+                    type="button"
+                    id="generateQuizBtn"
+                    class="generate-btn">
+
+                    <i class="bi bi-stars"></i>
+                    Generate Quiz
+
+                </button>
+
+
+            </div>
+
+
+
+            <!-- ========================= -->
+            <!-- HOW IT WORKS -->
+            <!-- ========================= -->
+
+            <div class="how-it-works">
+
+
+                <div class="how-icon">
+
+                    <i class="bi bi-lightbulb"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h3>
+                        How it works
+                    </h3>
+
+
+                    <p>
+                        Select your study material, choose a quiz type,
+                        and let StudyGenie generate questions from your notes.
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================= -->
+
+<script>
+
+
+/* ============================
+   QUIZ TYPE SELECTION
+============================ */
+
+const quizTypes =
+    document.querySelectorAll(".quiz-type");
+
+
+quizTypes.forEach(type => {
+
+
+    type.addEventListener("click", function () {
+
+
+        quizTypes.forEach(item => {
+
+            item.classList.remove("selected");
+
+        });
+
+
+        this.classList.add("selected");
+
+
+        const radio =
+            this.querySelector('input[type="radio"]');
+
+
+        if (radio) {
+
+            radio.checked = true;
+
+        }
+
+    });
+
+});
+
+/* ============================
+   GENERATE QUIZ
+============================ */
+
+const generateQuizBtn =
+    document.getElementById("generateQuizBtn");
+
+
+generateQuizBtn.addEventListener(
+    "click",
+    function () {
+
+
+        const file =
+            fileSelect.value;
+
+
+        const quizType =
+            document.querySelector(
+                'input[name="quizType"]:checked'
+            ).value;
+
+
+
+        /* NO FILE */
+
+        if (!file) {
+
+            alert(
+                "Please select a study file first."
+            );
+
+            return;
+
+        }
+
+
+        /* FLASHCARD */
+        if (quizType === "flashcard") {
+            window.location.href = "/flashcard?file=" + encodeURIComponent(file);
+            return;
+        }
+
+        /* MCQ */
+
+        if (quizType === "mcq") {
+            window.location.href =
+                "/mcq?file=" +
+                encodeURIComponent(file);
+            return;
+
+        }
+
+    }
+);
+
+
+</script>
+
+
+</body>
+
+</html>

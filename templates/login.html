@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+    background:#f5f5ff;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:'Poppins',sans-serif;
+}
+
+.login-card{
+    width:420px;
+    background:white;
+    padding:35px;
+    border-radius:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,.1);
+}
+
+.icon{
+    font-size:45px;
+    text-align:center;
+}
+
+.welcome{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.welcome h4{
+    font-size:28px;
+    margin-bottom:8px;
+}
+
+.welcome p{
+    font-size:18px;
+}
+
+.login-btn{
+    width:100%;
+    background:#4f46e5;
+    border:none;
+    padding:10px;
+    font-size:18px;
+    border-radius:8px;
+}
+
+.login-btn:hover{
+    background:#4338ca;
+}
+
+.remember-row{
+    margin-bottom:20px;
+}
+
+.remember-row input{
+    margin-right:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-card">
+
+    <div class="icon">
+        🎓
+    </div>
+
+    <div class="welcome">
+        <h4>Welcome Back!</h4>
+
+        <p class="text-muted">
+            Great to see you again.
+        </p>
+    </div>
+
+    <form action="/login" method="POST">
+
+        <!-- Email -->
+        <div class="mb-3">
+
+            <input
+                type="email"
+                name="email"
+                class="form-control"
+                placeholder="Email"
+                required
+            >
+
+        </div>
+
+
+        <!-- Password -->
+        <div class="mb-3">
+
+            <input
+                type="password"
+                name="password"
+                class="form-control"
+                placeholder="Password"
+                required
+            >
+
+        </div>
+
+        <!-- Login Button -->
+        <button
+            type="submit"
+            class="btn btn-primary login-btn"
+        >
+            Login
+        </button>
+
+    </form>
+
+
+    <!-- Sign Up -->
+    <div class="text-center mt-3">
+
+        Don't have an account?
+        <a href="/signup">Sign Up</a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
