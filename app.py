@@ -1610,5 +1610,7 @@ def delete(filename):
 
     return redirect(url_for("documents"))
 
+create_database()
+init_activity_table()
 if __name__ == "__main__": 
     app.run(debug=True)
