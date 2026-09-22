@@ -67,8 +67,8 @@ def get_page_count(filepath):
 
 app = Flask(__name__)
 app.secret_key = "studygenie_secret_key"
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 load_dotenv()
 
 UPLOAD_FOLDER = "uploads"
@@ -1610,7 +1610,5 @@ def delete(filename):
 
     return redirect(url_for("documents"))
 
-if __name__ == "__main__":
-    create_database()
-    add_role_column() 
+if __name__ == "__main__": 
     app.run(debug=True)
