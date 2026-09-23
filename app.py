@@ -67,8 +67,7 @@ def get_page_count(filepath):
 
 app = Flask(__name__)
 app.secret_key = "studygenie_secret_key"
-if os.name == "nt":
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 load_dotenv()
 
 UPLOAD_FOLDER = "uploads"
@@ -1111,8 +1110,9 @@ def login():
             "SELECT * FROM users WHERE email=? AND password=?",
             (email, password)
         )
-
+        
         user = cursor.fetchone()
+        print("LOGIN USER =", user)
         conn.close()
 
         if user:
@@ -1154,6 +1154,8 @@ def signup():
             (name, email, password)
         )
             conn.commit()
+            print("SIGNUP SAVED:", name, email)
+
             session["user_id"] = cursor.lastrowid
             session["user_name"] = name
             session["user_email"] = email
