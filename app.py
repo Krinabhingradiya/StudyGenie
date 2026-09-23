@@ -67,7 +67,8 @@ def get_page_count(filepath):
 
 app = Flask(__name__)
 app.secret_key = "studygenie_secret_key"
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 load_dotenv()
 
 UPLOAD_FOLDER = "uploads"
@@ -1033,9 +1034,13 @@ def extract_text_from_pdf(pdf_path, max_pages=20):
             page_text = page.get_text("text")
 
             if not page_text.strip():
-                pix = page.get_pixmap(dpi=200)
-                img = Image.open(io.BytesIO(pix.tobytes("png")))
-                page_text = pytesseract.image_to_string(img, lang="eng")
+                try:
+                    pix = page.get_pixmap(dpi=200)
+                    img = Image.open(io.BytesIO(pix.tobytes("png")))
+                    page_text = pytesseract.image_to_string(img, lang="eng")
+                except Exception as ocr_error:
+                    print(f"OCR ERROR on page {i+1}, skipping this page:", ocr_error)
+                    page_text = ""
 
             text += page_text + "\n"
 
@@ -1050,7 +1055,7 @@ def extract_text_from_pdf(pdf_path, max_pages=20):
 
     finally:
         if doc is not None:
-            doc.close()   
+            doc.close()
         
 # ---------------- DATABASE ---------------- #
 
