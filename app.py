@@ -9,7 +9,6 @@ from flask import (
     flash,
     jsonify
 )
-import sqlite3
 import os
 from datetime import datetime
 from dotenv import load_dotenv
@@ -30,6 +29,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
 import zipfile
 from xml.etree import ElementTree as ET
+
+from db import get_db_connection
 
 def get_page_count(filepath):
     """Returns page count for PDF (exact) and DOCX (best estimate)."""
@@ -67,10 +68,7 @@ def get_page_count(filepath):
 
 app = Flask(__name__)
 app.secret_key = "studygenie_secret_key"
-<<<<<<< HEAD
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
-=======
->>>>>>> 28a128d2afc0ee1c6e1a090ca11588337842b744
 if os.name == "nt":
     pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 load_dotenv()
@@ -117,12 +115,13 @@ def format_relative_time(iso_str):
         return f"{diff.days} days ago"
 
     return dt.strftime("%d %b %Y")
+
 def init_activity_table():
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS activity_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER,
             activity_type TEXT,
             filename TEXT,
@@ -130,9 +129,9 @@ def init_activity_table():
         )
     """)
     conn.commit()
+    cursor.close()
     conn.close()
-    
-init_activity_table()   # app.py load hote hi ek baar chal jayega
+
 def generate_summary(text):
     print("INPUT LENGTH =", len(text))
     last_error = None
@@ -180,7 +179,7 @@ Study Material:
             print("RAW RESPONSE:")
             print(raw)
             print("="*50)
-            
+
             raw = re.sub(r"^```(?:json)?\s*", "", raw)
             raw = re.sub(r"\s*```$", "", raw)
 
@@ -235,6 +234,7 @@ def get_youtube_videos(topic, max_results=4):
         }
         for item in items
     ]
+
 def generate_flashcards(text):
     last_error = None
     last_result = None
@@ -322,6 +322,7 @@ Study Material:
             }
         ]
     }
+
 @app.route("/flashcard")
 def flashcard():
     return render_template("flashcard.html")
@@ -387,9 +388,11 @@ def generate_flashcards_api():
             "success": False,
             "message": str(e)
         })
+
 @app.route("/mcq")
 def mcq():
-    return render_template("mcq.html")       
+    return render_template("mcq.html")
+
 @app.route("/generate-mcq")
 def generate_mcq():
 
@@ -494,16 +497,17 @@ STUDY MATERIAL:
             return jsonify({
                 "error": "No questions generated"
             }), 500
-        conn = sqlite3.connect("users.db")
+
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (?,?,?,?)",
+            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (%s,%s,%s,%s)",
             (session["user_id"], "quiz", file_name, datetime.now().isoformat())
         )
         conn.commit()
+        cursor.close()
         conn.close()
 
-        return jsonify(data)
         return jsonify(data)
 
     except Exception as e:
@@ -513,7 +517,7 @@ STUDY MATERIAL:
         return jsonify({
             "error": str(e)
         }), 500
-        
+
 _document_chunks_cache = {}
 # ---------------- CHUNKING ---------------- #
 
@@ -771,9 +775,7 @@ def upload_chat_file():
     file.save(os.path.join(UPLOAD_FOLDER, filename))
 
     return jsonify({"success": True, "filename": filename})
-# =====================================================================
-# ADD to app.py
-# =====================================================================
+
 def generate_study_plan(text, days_available):
     try:
         response = client.chat.completions.create(
@@ -963,7 +965,8 @@ Rules:
             "strengths": ["Answer was received."],
             "improvements": ["Could not fully evaluate this answer — please try again."]
         }
-# ---------------- STUDY PLANNER PAGE ---------------- 
+
+# ---------------- STUDY PLANNER PAGE ----------------
 @app.route("/study-planner")
 def study_planner():
     if "user_email" not in session:
@@ -1014,13 +1017,14 @@ def generate_study_plan_api():
         result = generate_study_plan(text, days_available)
         plan = result.get("plan", [])
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (?,?,?,?)",
+            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (%s,%s,%s,%s)",
             (session["user_id"], "study_plan", filename, datetime.now().isoformat())
         )
         conn.commit()
+        cursor.close()
         conn.close()
 
         return jsonify({"success": True, "plan": plan})
@@ -1028,6 +1032,7 @@ def generate_study_plan_api():
     except Exception as e:
         print("STUDY PLAN ERROR:", e)
         return jsonify({"success": False, "message": str(e)})
+
 # ---------------- PDF TEXT EXTRACTION ---------------- #
 def extract_text_from_pdf(pdf_path, max_pages=20):
     doc = None
@@ -1065,9 +1070,8 @@ def extract_text_from_pdf(pdf_path, max_pages=20):
 
     finally:
         if doc is not None:
-<<<<<<< HEAD
-            doc.close()   
-            
+            doc.close()
+
 from docx import Document
 
 def extract_text_from_docx(file_path):
@@ -1096,19 +1100,16 @@ def extract_text_from_docx(file_path):
     except Exception as e:
         print("DOCX ERROR:", e)
         return ""
-=======
-            doc.close()
->>>>>>> 28a128d2afc0ee1c6e1a090ca11588337842b744
-        
+
 # ---------------- DATABASE ---------------- #
 
 def create_database():
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT,
         email TEXT UNIQUE,
         password TEXT,
@@ -1117,19 +1118,17 @@ def create_database():
     """)
 
     conn.commit()
+    cursor.close()
     conn.close()
-    
+
 def add_role_column():
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    try:
-        cursor.execute("ALTER TABLE users ADD COLUMN role TEXT")
-        print("Role column added successfully.")
-    except sqlite3.OperationalError:
-        print("Role column already exists.")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT")
 
     conn.commit()
+    cursor.close()
     conn.close()
 
 # ---------------- HOME ---------------- #
@@ -1151,16 +1150,17 @@ def login():
         # Remember Me check
         remember_me = request.form.get("remember_me")
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT * FROM users WHERE email=? AND password=?",
+            "SELECT * FROM users WHERE email=%s AND password=%s",
             (email, password)
         )
-        
+
         user = cursor.fetchone()
         print("LOGIN USER =", user)
+        cursor.close()
         conn.close()
 
         if user:
@@ -1183,6 +1183,7 @@ def login():
         return "Invalid Email or Password"
 
     return render_template("login.html")
+
 # ---------------- SIGNUP ---------------- #
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -1193,27 +1194,31 @@ def signup():
         name = request.form["name"]
         email = request.form["email"]
         password = request.form["password"]
-    
-        conn = sqlite3.connect("users.db")
+
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         try:
             cursor.execute(
-            "INSERT INTO users(name,email,password) VALUES(?,?,?)",
-            (name, email, password)
-        )
+                "INSERT INTO users(name,email,password) VALUES(%s,%s,%s) RETURNING id",
+                (name, email, password)
+            )
+            new_id = cursor.fetchone()[0]
             conn.commit()
             print("SIGNUP SAVED:", name, email)
 
-            session["user_id"] = cursor.lastrowid
+            session["user_id"] = new_id
             session["user_name"] = name
             session["user_email"] = email
             return redirect(url_for("dashboard"))
 
-        except sqlite3.IntegrityError:
+        except Exception as e:
+            conn.rollback()
+            print("SIGNUP ERROR:", e)
             return "Email already exists."
 
         finally:
+            cursor.close()
             conn.close()
 
     return render_template("signup.html")
@@ -1227,55 +1232,56 @@ def dashboard():
 
     files = os.listdir(UPLOAD_FOLDER)
 
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT name,email,role FROM users WHERE id=?",
+        "SELECT name,email,role FROM users WHERE id=%s",
         (session["user_id"],)
     )
     user = cursor.fetchone()
 
     # counts for the top stat cards (kept as before)
     cursor.execute(
-        "SELECT COUNT(DISTINCT filename) FROM activity_log WHERE user_id=? AND activity_type='summary'",
+        "SELECT COUNT(DISTINCT filename) FROM activity_log WHERE user_id=%s AND activity_type='summary'",
         (session["user_id"],)
     )
     summaries_count = cursor.fetchone()[0]
 
     cursor.execute(
-        "SELECT COUNT(*) FROM activity_log WHERE user_id=? AND activity_type='quiz'",
+        "SELECT COUNT(*) FROM activity_log WHERE user_id=%s AND activity_type='quiz'",
         (session["user_id"],)
     )
     quizzes_count = cursor.fetchone()[0]
 
     cursor.execute(
-        "SELECT COUNT(*) FROM activity_log WHERE user_id=? AND activity_type='study_plan'",
+        "SELECT COUNT(*) FROM activity_log WHERE user_id=%s AND activity_type='study_plan'",
         (session["user_id"],)
     )
     study_plans_count = cursor.fetchone()[0]
 
-    # 👇 NEW: per-document progress calculation
+    # per-document progress calculation
     cursor.execute(
-        "SELECT DISTINCT filename FROM activity_log WHERE user_id=? AND activity_type='summary'",
+        "SELECT DISTINCT filename FROM activity_log WHERE user_id=%s AND activity_type='summary'",
         (session["user_id"],)
     )
     summarized_files = {row[0] for row in cursor.fetchall()}
 
     cursor.execute(
-        "SELECT DISTINCT filename FROM activity_log WHERE user_id=? AND activity_type='quiz'",
+        "SELECT DISTINCT filename FROM activity_log WHERE user_id=%s AND activity_type='quiz'",
         (session["user_id"],)
     )
     quizzed_files = {row[0] for row in cursor.fetchall()}
-    
+
     cursor.execute(
-        "SELECT activity_type, filename, created_at FROM activity_log WHERE user_id=? ORDER BY created_at DESC LIMIT 2",
+        "SELECT activity_type, filename, created_at FROM activity_log WHERE user_id=%s ORDER BY created_at DESC LIMIT 2",
         (session["user_id"],)
     )
     raw_activities = cursor.fetchall()
 
+    cursor.close()
     conn.close()
-    
+
     recent_activities = []
     for activity_type, filename, created_at in raw_activities:
         meta = ACTIVITY_META.get(
@@ -1322,6 +1328,7 @@ def dashboard():
         files=files,
         today=datetime.now().strftime("%d-%m-%Y")
     )
+
 @app.route("/profile")
 def profile():
 
@@ -1334,6 +1341,7 @@ def profile():
         user_email=session["user_email"],
         user_role=session["user_role"]
     )
+
 # ---------------- EDIT PROFILE ---------------- #
 
 @app.route("/edit_profile", methods=["GET", "POST"])
@@ -1348,13 +1356,13 @@ def edit_profile():
         email = request.form["email"]
         role = request.form["role"]
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         UPDATE users
-        SET name=?, email=?, role=?
-        WHERE id=?
+        SET name=%s, email=%s, role=%s
+        WHERE id=%s
         """,
         (
         name,
@@ -1366,12 +1374,13 @@ def edit_profile():
         print("Session Email:", session["user_email"])
         print("New Name:", name)
         conn.commit()
+        cursor.close()
         conn.close()
 
         session["user_name"] = name
         session["user_email"] = email
         session["user_role"] = role
-        
+
         flash("Profile updated successfully!", "success")
 
         return redirect(url_for("dashboard"))
@@ -1382,6 +1391,7 @@ def edit_profile():
         user_email=session["user_email"],
         user_role=session["user_role"]
     )
+
 # ---------------- CHANGE PASSWORD ---------------- #
 
 @app.route("/change_password", methods=["GET", "POST"])
@@ -1396,42 +1406,41 @@ def change_password():
         new_password = request.form["new_password"]
         confirm_password = request.form["confirm_password"]
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT password FROM users WHERE id=?",
+            "SELECT password FROM users WHERE id=%s",
             (session["user_id"],)
         )
 
         user = cursor.fetchone()
         if user[0] != current_password:
             flash("Current password is incorrect!", "danger")
+            cursor.close()
             conn.close()
             return redirect(url_for("change_password"))
 
         if new_password != confirm_password:
             flash("New password and Confirm password do not match!", "danger")
+            cursor.close()
             conn.close()
             return redirect(url_for("change_password"))
-        
+
         # Check new password is different
         if current_password == new_password:
             flash("New password cannot be the same as current password!", "danger")
-            conn.close()
-            return redirect(url_for("change_password"))
-        # Check confirm password
-        if new_password != confirm_password:
-            flash("New password and Confirm password do not match!", "danger")
+            cursor.close()
             conn.close()
             return redirect(url_for("change_password"))
 
         cursor.execute(
-            "UPDATE users SET password=? WHERE id=?",
+            "UPDATE users SET password=%s WHERE id=%s",
             (new_password, session["user_id"])
         )
 
         conn.commit()
+        cursor.close()
         conn.close()
 
         flash("Password changed successfully!", "success")
@@ -1473,13 +1482,14 @@ def generate_interview_questions_api():
         if not questions:
             return jsonify({"success": False, "message": "Could not generate questions. Please try again."})
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (?,?,?,?)",
+            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (%s,%s,%s,%s)",
             (session["user_id"], "interview", filename or interview_type, datetime.now().isoformat())
         )
         conn.commit()
+        cursor.close()
         conn.close()
 
         return jsonify({"success": True, "questions": questions})
@@ -1508,6 +1518,7 @@ def evaluate_interview_answer_api():
     except Exception as e:
         print("INTERVIEW FEEDBACK ERROR:", e)
         return jsonify({"success": False, "message": "Could not evaluate your answer. Please try again."})
+
 # ---------------- LOGOUT ---------------- #
 
 @app.route("/logout")
@@ -1525,13 +1536,14 @@ def upload():
     if file and file.filename != "":
         file.save(os.path.join(UPLOAD_FOLDER, file.filename))
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (?,?,?,?)",
+            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (%s,%s,%s,%s)",
             (session.get("user_id"), "upload", file.filename, datetime.now().isoformat())
         )
         conn.commit()
+        cursor.close()
         conn.close()
 
     return redirect(url_for("dashboard"))
@@ -1566,6 +1578,7 @@ def documents():
         "upload.html",
         files=documents_data
     )
+
 # ---------------- DOWNLOAD ---------------- #
 
 @app.route("/download/<path:filename>")
@@ -1621,14 +1634,14 @@ def summary(filename):
     session["last_summary_filename"] = filename
 
     # Activity log
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute(
         """
         INSERT INTO activity_log
         (user_id, activity_type, filename, created_at)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
         """,
         (
             session["user_id"],
@@ -1639,6 +1652,7 @@ def summary(filename):
     )
 
     conn.commit()
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -1647,6 +1661,7 @@ def summary(filename):
         reading_time=reading_time,
         filename=filename
     )
+
 @app.route("/download-summary/<filename>")
 def download_summary(filename):
 
@@ -1695,6 +1710,7 @@ def delete(filename):
     return redirect(url_for("documents"))
 
 create_database()
+add_role_column()
 init_activity_table()
-if __name__ == "__main__": 
+if __name__ == "__main__":
     app.run(debug=True)
