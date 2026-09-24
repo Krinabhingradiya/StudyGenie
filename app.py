@@ -67,7 +67,9 @@ def get_page_count(filepath):
 
 app = Flask(__name__)
 app.secret_key = "studygenie_secret_key"
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 load_dotenv()
 
 UPLOAD_FOLDER = "uploads"
@@ -129,6 +131,7 @@ def init_activity_table():
     
 init_activity_table()   # app.py load hote hi ek baar chal jayega
 def generate_summary(text):
+    print("INPUT LENGTH =", len(text))
     last_error = None
 
     for attempt in range(3):
@@ -170,6 +173,11 @@ Study Material:
             )
 
             raw = response.choices[0].message.content.strip()
+            print("="*50)
+            print("RAW RESPONSE:")
+            print(raw)
+            print("="*50)
+            
             raw = re.sub(r"^```(?:json)?\s*", "", raw)
             raw = re.sub(r"\s*```$", "", raw)
 
@@ -1051,6 +1059,35 @@ def extract_text_from_pdf(pdf_path, max_pages=20):
     finally:
         if doc is not None:
             doc.close()   
+            
+from docx import Document
+
+def extract_text_from_docx(file_path):
+    try:
+        doc = Document(file_path)
+
+        text = []
+
+        for para in doc.paragraphs:
+            if para.text.strip():
+                text.append(para.text)
+
+        # Tables bhi read karo
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if cell.text.strip():
+                        text.append(cell.text)
+
+        final_text = "\n".join(text)
+
+        print("DOCX TEXT LENGTH =", len(final_text))
+
+        return final_text
+
+    except Exception as e:
+        print("DOCX ERROR:", e)
+        return ""
         
 # ---------------- DATABASE ---------------- #
 
@@ -1121,6 +1158,7 @@ def login():
             session["user_name"] = user[1]
             session["user_email"] = user[2]
             session["user_role"] = user[4]
+            session.permanent = True
 
             # Remember Me
             if remember_me:
@@ -1537,25 +1575,58 @@ def summary(filename):
     if "user_email" not in session:
         return redirect(url_for("login"))
 
-    pdf_path = os.path.join(UPLOAD_FOLDER, filename)
-    extracted_text = extract_text_from_pdf(pdf_path)
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+
+    # Extract text based on file type
+    if filename.lower().endswith(".pdf"):
+        extracted_text = extract_text_from_pdf(file_path)
+
+    elif filename.lower().endswith(".docx"):
+        extracted_text = extract_text_from_docx(file_path)
+
+    else:
+        return "Unsupported file format"
+
+    print("FILE =", filename)
+    print("TEXT LENGTH =", len(extracted_text))
+
+    # If no text found
+    if not extracted_text or len(extracted_text.strip()) < 20:
+        return "No readable text found in document."
+
     summary_data = generate_summary(extracted_text)
     topics = summary_data.get("topics", [])
 
-    total_words = sum(len(str(pt).split()) for t in topics for pt in t.get("points", []))
+    total_words = sum(
+        len(str(pt).split())
+        for t in topics
+        for pt in t.get("points", [])
+    )
+
     reading_time = max(1, round(total_words / 200))
 
-    # Save topics in session for PDF download
+    # Save topics in session
     session["last_summary_topics"] = topics
     session["last_summary_filename"] = filename
 
-    # 👇 NEW: log this summary generation for progress tracking
+    # Activity log
     conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
+
     cursor.execute(
-        "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (?,?,?,?)",
-        (session["user_id"], "summary", filename, datetime.now().isoformat())
+        """
+        INSERT INTO activity_log
+        (user_id, activity_type, filename, created_at)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            session["user_id"],
+            "summary",
+            filename,
+            datetime.now().isoformat()
+        )
     )
+
     conn.commit()
     conn.close()
 
