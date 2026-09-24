@@ -1338,8 +1338,7 @@ def profile():
     return render_template(
         "profile.html",
         user_name=session["user_name"],
-        user_email=session["user_email"],
-        user_role=session["user_role"]
+        user_email=session["user_email"]
     )
 
 # ---------------- EDIT PROFILE ---------------- #
@@ -1354,20 +1353,18 @@ def edit_profile():
 
         name = request.form["name"]
         email = request.form["email"]
-        role = request.form["role"]
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         UPDATE users
-        SET name=%s, email=%s, role=%s
+        SET name=%s, email=%s
         WHERE id=%s
         """,
         (
         name,
         email,
-        role,
         session["user_id"]
         ))
         print("Rows Updated:", cursor.rowcount)
@@ -1379,7 +1376,6 @@ def edit_profile():
 
         session["user_name"] = name
         session["user_email"] = email
-        session["user_role"] = role
 
         flash("Profile updated successfully!", "success")
 
@@ -1388,8 +1384,7 @@ def edit_profile():
     return render_template(
         "edit_profile.html",
         user_name=session["user_name"],
-        user_email=session["user_email"],
-        user_role=session["user_role"]
+        user_email=session["user_email"]
     )
 
 # ---------------- CHANGE PASSWORD ---------------- #
