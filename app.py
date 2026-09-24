@@ -1339,7 +1339,6 @@ def profile():
         "profile.html",
         user_name=session["user_name"],
         user_email=session["user_email"],
-        user_role=session["user_role"]
     )
 
 # ---------------- EDIT PROFILE ---------------- #
@@ -1354,20 +1353,22 @@ def edit_profile():
 
         name = request.form["name"]
         email = request.form["email"]
-        role = request.form["role"]
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         UPDATE users
+<<<<<<< HEAD
         SET name=%s, email=%s, role=%s
+=======
+        SET name=%s, email=%s
+>>>>>>> 105c44c (Updated app.py and Neon database)
         WHERE id=%s
         """,
         (
         name,
         email,
-        role,
         session["user_id"]
         ))
         print("Rows Updated:", cursor.rowcount)
@@ -1379,7 +1380,10 @@ def edit_profile():
 
         session["user_name"] = name
         session["user_email"] = email
+<<<<<<< HEAD
         session["user_role"] = role
+=======
+>>>>>>> 105c44c (Updated app.py and Neon database)
 
         flash("Profile updated successfully!", "success")
 
@@ -1389,7 +1393,6 @@ def edit_profile():
         "edit_profile.html",
         user_name=session["user_name"],
         user_email=session["user_email"],
-        user_role=session["user_role"]
     )
 
 # ---------------- CHANGE PASSWORD ---------------- #
@@ -1713,4 +1716,8 @@ create_database()
 add_role_column()
 init_activity_table()
 if __name__ == "__main__":
+<<<<<<< HEAD
     app.run(debug=True)
+=======
+    app.run(debug=True)
+>>>>>>> 105c44c (Updated app.py and Neon database)
