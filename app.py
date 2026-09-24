@@ -1359,11 +1359,7 @@ def edit_profile():
 
         cursor.execute("""
         UPDATE users
-<<<<<<< HEAD
-        SET name=%s, email=%s, role=%s
-=======
         SET name=%s, email=%s
->>>>>>> 105c44c (Updated app.py and Neon database)
         WHERE id=%s
         """,
         (
@@ -1380,13 +1376,8 @@ def edit_profile():
 
         session["user_name"] = name
         session["user_email"] = email
-<<<<<<< HEAD
-        session["user_role"] = role
-=======
->>>>>>> 105c44c (Updated app.py and Neon database)
 
         flash("Profile updated successfully!", "success")
-
         return redirect(url_for("dashboard"))
 
     return render_template(
@@ -1716,8 +1707,5 @@ create_database()
 add_role_column()
 init_activity_table()
 if __name__ == "__main__":
-<<<<<<< HEAD
     app.run(debug=True)
-=======
     app.run(debug=True)
->>>>>>> 105c44c (Updated app.py and Neon database)
