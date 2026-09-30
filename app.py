@@ -78,6 +78,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 client = Groq(api_key=GROQ_API_KEY)
 ACTIVITY_META = {
@@ -1338,7 +1339,7 @@ def profile():
     return render_template(
         "profile.html",
         user_name=session["user_name"],
-        user_email=session["user_email"],
+        user_email=session["user_email"]
     )
 
 # ---------------- EDIT PROFILE ---------------- #
@@ -1378,12 +1379,13 @@ def edit_profile():
         session["user_email"] = email
 
         flash("Profile updated successfully!", "success")
+
         return redirect(url_for("dashboard"))
 
     return render_template(
         "edit_profile.html",
         user_name=session["user_name"],
-        user_email=session["user_email"],
+        user_email=session["user_email"]
     )
 
 # ---------------- CHANGE PASSWORD ---------------- #
@@ -1707,5 +1709,4 @@ create_database()
 add_role_column()
 init_activity_table()
 if __name__ == "__main__":
-    app.run(debug=True)
     app.run(debug=True)

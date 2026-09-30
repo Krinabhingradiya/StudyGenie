@@ -382,11 +382,48 @@
                             </div>
                         </div>
 
-                        <div class="ic-answer-label"><i class="bi bi-pencil"></i> Your Answer</div>
-                        <div class="ic-answer-wrap">
-                            <textarea class="ic-answer-box" id="icAnswerBox" maxlength="1000"
-                                placeholder="Type your answer here..." oninput="icUpdateCharCount()"></textarea>
-                            <span class="ic-char-count" id="icCharCount">0/1000</span>
+                        <div class="ic-answer-label"><i class="bi bi-camera-video"></i> Your Answer</div>
+
+                        <!-- CAMERA + TRANSCRIPT AREA -->
+                        <div style="display:flex; gap:14px; align-items:stretch; min-height:200px;">
+
+                            <!-- Camera Feed -->
+                            <div style="position:relative; width:220px; flex-shrink:0; border-radius:14px; overflow:hidden; background:#1a1a2e; border:2px solid #e3e0eb;">
+                                <video id="icCameraFeed" autoplay muted playsinline
+                                    style="width:100%; height:100%; object-fit:cover; display:block; min-height:180px;"></video>
+                                <!-- Recording indicator -->
+                                <div id="icRecordingBadge" style="display:none; position:absolute; top:10px; left:10px; background:rgba(220,38,38,0.9); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; align-items:center; gap:6px;">
+                                    <span style="width:8px;height:8px;background:white;border-radius:50%;display:inline-block;animation:blink 1s infinite;"></span>
+                                    Recording...
+                                </div>
+                                <!-- Camera off placeholder -->
+                                <div id="icCameraOff" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#888;font-size:13px;gap:8px;">
+                                    <i class="bi bi-camera-video-off" style="font-size:32px;"></i>
+                                    <span>Camera Off</span>
+                                </div>
+                                <!-- Camera On badge -->
+                                <div id="icCameraOnBadge" style="display:none; position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; align-items:center; gap:6px;">
+                                    <i class="bi bi-camera-video-fill" style="color:#4ade80;"></i> Camera On
+                                </div>
+                            </div>
+
+                            <!-- Live Transcript -->
+                            <div style="flex:1; border:1.5px solid #e3e0eb; border-radius:14px; padding:14px; background:#fafafe; display:flex; flex-direction:column; gap:8px; min-height:180px;">
+                                <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#5a5670;">
+                                    <i class="bi bi-chat-left-dots" style="color:#674de1;"></i> Live Transcript
+                                    <span id="icListeningBadge" style="display:none; background:#fef2f2; color:#dc2626; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600;">
+                                        🎙 Listening...
+                                    </span>
+                                </div>
+                                <textarea id="icAnswerBox" maxlength="1000"
+                                    placeholder="Your spoken answer will appear here... or type directly."
+                                    oninput="icUpdateCharCount()"
+                                    style="flex:1; border:none; background:transparent; resize:none; font-size:13.5px; color:#2d2a3e; font-family:inherit; outline:none; min-height:120px;"></textarea>
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-size:11px; color:#a19dab;" id="icCharCount">0/1000</span>
+                                </div>
+                            </div>
+
                         </div>
 
                         <div class="ic-answer-actions">
@@ -397,6 +434,10 @@
                                 <i class="bi bi-send"></i> Submit Answer
                             </button>
                         </div>
+
+                        <style>
+                        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+                        </style>
                     </div>
                 </div>
 
@@ -514,6 +555,31 @@ function icUpdateCharCount(){
     document.getElementById('icCharCount').innerText = box.value.length + '/1000';
 }
 
+/* ===== Camera start/stop ===== */
+let icCameraStream = null;
+
+async function icStartCamera(){
+    try {
+        icCameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const video = document.getElementById('icCameraFeed');
+        video.srcObject = icCameraStream;
+        document.getElementById('icCameraOff').style.display = 'none';
+        document.getElementById('icCameraOnBadge').style.display = 'flex';
+    } catch(e) {
+        console.log('Camera not available:', e);
+    }
+}
+
+function icStopCamera(){
+    if (icCameraStream) {
+        icCameraStream.getTracks().forEach(t => t.stop());
+        icCameraStream = null;
+        document.getElementById('icCameraFeed').srcObject = null;
+        document.getElementById('icCameraOff').style.display = 'flex';
+        document.getElementById('icCameraOnBadge').style.display = 'none';
+    }
+}
+
 /* ===== Optional voice input via browser Speech Recognition ===== */
 function icToggleRecording(){
     const btn = document.getElementById('icMicBtn');
@@ -526,8 +592,16 @@ function icToggleRecording(){
 
     if (icRecording) {
         icRecognition.stop();
+        icStopCamera();
+        document.getElementById('icRecordingBadge').style.display = 'none';
+        document.getElementById('icListeningBadge').style.display = 'none';
         return;
     }
+
+    // Start camera when recording starts
+    icStartCamera();
+    document.getElementById('icRecordingBadge').style.display = 'flex';
+    document.getElementById('icListeningBadge').style.display = 'inline-block';
 
     icRecognition = new SpeechRecognition();
     icRecognition.lang = 'en-US';
@@ -548,6 +622,8 @@ function icToggleRecording(){
         icRecording = false;
         btn.classList.remove('recording');
         btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer (Optional)';
+        document.getElementById('icRecordingBadge').style.display = 'none';
+        document.getElementById('icListeningBadge').style.display = 'none';
     };
 
     icRecognition.start();
