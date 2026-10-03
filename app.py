@@ -1478,15 +1478,18 @@ def generate_interview_questions_api():
         if not questions:
             return jsonify({"success": False, "message": "Could not generate questions. Please try again."})
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (%s,%s,%s,%s)",
-            (session["user_id"], "interview", filename or interview_type, datetime.now().isoformat())
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO activity_log (user_id, activity_type, filename, created_at) VALUES (%s,%s,%s,%s)",
+                (session["user_id"], "interview", filename or interview_type, datetime.now().isoformat())
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as db_err:
+            print("DB LOG ERROR (non-fatal):", db_err)
 
         return jsonify({"success": True, "questions": questions})
 

@@ -374,70 +374,112 @@
                             </div>
                         </div>
 
-                        <div class="ic-q-bubble">
-                            <div class="ic-q-bubble-icon"><i class="bi bi-chat-left-text"></i></div>
-                            <div>
-                                <div class="ic-q-bubble-label">Question</div>
-                                <div class="ic-q-bubble-text" id="icQText"></div>
-                            </div>
-                        </div>
+                        <div class="ic-answer-label" style="display:none;"><i class="bi bi-camera-video"></i> Your Answer</div>
 
-                        <div class="ic-answer-label"><i class="bi bi-camera-video"></i> Your Answer</div>
+                        <!-- TWO PANEL: AI Interviewer | Your Camera -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
 
-                        <!-- CAMERA + TRANSCRIPT AREA -->
-                        <div style="display:flex; gap:14px; align-items:stretch; min-height:200px;">
-
-                            <!-- Camera Feed -->
-                            <div style="position:relative; width:220px; flex-shrink:0; border-radius:14px; overflow:hidden; background:#1a1a2e; border:2px solid #e3e0eb;">
-                                <video id="icCameraFeed" autoplay muted playsinline
-                                    style="width:100%; height:100%; object-fit:cover; display:block; min-height:180px;"></video>
-                                <!-- Recording indicator -->
-                                <div id="icRecordingBadge" style="display:none; position:absolute; top:10px; left:10px; background:rgba(220,38,38,0.9); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; align-items:center; gap:6px;">
-                                    <span style="width:8px;height:8px;background:white;border-radius:50%;display:inline-block;animation:blink 1s infinite;"></span>
-                                    Recording...
+                            <!-- LEFT: AI Interviewer -->
+                            <div style="position:relative; border-radius:14px; overflow:hidden; background:linear-gradient(135deg,#1e1b4b,#312e81); min-height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; gap:10px;">
+                                
+                                <!-- AI Label top left -->
+                                <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.5); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; display:flex; align-items:center; gap:6px;">
+                                    <i class="bi bi-robot"></i> AI Interviewer
                                 </div>
-                                <!-- Camera off placeholder -->
+
+                                <!-- Simple Robot - no box, just emoji with glow -->
+                                <div id="icRobotAvatar" style="font-size:64px; line-height:1; filter:drop-shadow(0 0 16px rgba(161,138,248,0.7)); transition:transform 0.3s;">🤖</div>
+
+                                <!-- Sound wave animation when speaking -->
+                                <div id="icSoundWave" style="display:none; align-items:flex-end; gap:3px; height:24px;">
+                                    <span style="width:4px;background:#a18af8;border-radius:3px;animation:wave 0.8s infinite 0s;display:inline-block;"></span>
+                                    <span style="width:4px;background:#a18af8;border-radius:3px;animation:wave 0.8s infinite 0.1s;display:inline-block;"></span>
+                                    <span style="width:4px;background:#a18af8;border-radius:3px;animation:wave 0.8s infinite 0.2s;display:inline-block;"></span>
+                                    <span style="width:4px;background:#a18af8;border-radius:3px;animation:wave 0.8s infinite 0.3s;display:inline-block;"></span>
+                                    <span style="width:4px;background:#a18af8;border-radius:3px;animation:wave 0.8s infinite 0.4s;display:inline-block;"></span>
+                                    <span style="width:4px;background:#a18af8;border-radius:3px;animation:wave 0.8s infinite 0.5s;display:inline-block;"></span>
+                                    <span style="width:4px;background:#a18af8;border-radius:3px;animation:wave 0.8s infinite 0.6s;display:inline-block;"></span>
+                                </div>
+
+                                <!-- Question text -->
+                                <div id="icQText" style="color:rgba(255,255,255,0.9); font-size:12.5px; font-weight:500; text-align:center; line-height:1.5; max-width:95%;"></div>
+
+                                <!-- Speaking badge top right -->
+                                <div id="icSpeakingBadge" style="display:none; position:absolute; top:10px; right:10px; background:rgba(79,209,121,0.9); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; align-items:center; gap:6px;">
+                                    🔊 Speaking...
+                                </div>
+
+                                <!-- Listen Again -->
+                                <button onclick="icListenAgain()" style="position:absolute; bottom:10px; right:10px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:white; border-radius:8px; padding:5px 12px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                                    <i class="bi bi-volume-up"></i> Listen Again
+                                </button>
+                            </div>
+
+                            <!-- RIGHT: Your Camera -->
+                            <div style="position:relative; border-radius:14px; overflow:hidden; background:#111; min-height:200px;">
+                                <video id="icCameraFeed" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover; display:block; min-height:200px;"></video>
+                                <!-- Camera Off placeholder -->
                                 <div id="icCameraOff" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#888;font-size:13px;gap:8px;">
                                     <i class="bi bi-camera-video-off" style="font-size:32px;"></i>
                                     <span>Camera Off</span>
                                 </div>
-                                <!-- Camera On badge -->
-                                <div id="icCameraOnBadge" style="display:none; position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; align-items:center; gap:6px;">
-                                    <i class="bi bi-camera-video-fill" style="color:#4ade80;"></i> Camera On
+                                <!-- Your Camera label -->
+                                <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.55); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                    <i class="bi bi-camera-video-fill" style="color:#4ade80;"></i> Your Camera
                                 </div>
-                            </div>
-
-                            <!-- Live Transcript -->
-                            <div style="flex:1; border:1.5px solid #e3e0eb; border-radius:14px; padding:14px; background:#fafafe; display:flex; flex-direction:column; gap:8px; min-height:180px;">
-                                <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#5a5670;">
-                                    <i class="bi bi-chat-left-dots" style="color:#674de1;"></i> Live Transcript
-                                    <span id="icListeningBadge" style="display:none; background:#fef2f2; color:#dc2626; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600;">
-                                        🎙 Listening...
-                                    </span>
+                                <!-- Recording badge -->
+                                <div id="icRecordingBadge" style="display:none; position:absolute; top:10px; right:10px; background:rgba(220,38,38,0.9); color:white; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; align-items:center; gap:6px;">
+                                    <span style="width:8px;height:8px;background:white;border-radius:50%;display:inline-block;animation:blink 1s infinite;"></span>
+                                    Recording <span id="icRecTimer">00:00</span>
                                 </div>
-                                <textarea id="icAnswerBox" maxlength="1000"
-                                    placeholder="Your spoken answer will appear here... or type directly."
-                                    oninput="icUpdateCharCount()"
-                                    style="flex:1; border:none; background:transparent; resize:none; font-size:13.5px; color:#2d2a3e; font-family:inherit; outline:none; min-height:120px;"></textarea>
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span style="font-size:11px; color:#a19dab;" id="icCharCount">0/1000</span>
+                                <!-- Bottom controls -->
+                                <div style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center;">
+                                    <!-- Camera toggle -->
+                                    <button onclick="icToggleCamera()" id="icCamBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:white;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-camera-video"></i>
+                                    </button>
+                                    <!-- Stop recording (red) -->
+                                    <button id="icStopRecBtn" onclick="icStopAll()" style="width:44px;height:44px;border-radius:50%;background:#dc2626;border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-stop-fill"></i>
+                                    </button>
+                                    <!-- Mic toggle -->
+                                    <button onclick="icToggleMic()" id="icMicToggleBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:white;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-mic"></i>
+                                    </button>
                                 </div>
                             </div>
 
                         </div>
 
-                        <div class="ic-answer-actions">
+                        <!-- Live Transcript (full width below) -->
+                        <div style="border:1.5px solid #e3e0eb; border-radius:14px; padding:14px; background:#fafafe; margin-top:12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                                <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#5a5670;">
+                                    <i class="bi bi-chat-left-dots" style="color:#674de1;"></i> Live Transcript
+                                    <span id="icListeningBadge" style="display:none; background:#fef2f2; color:#dc2626; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600;">🎙 Listening...</span>
+                                </div>
+                                <span style="font-size:11px; color:#a19dab;" id="icCharCount">0/1000</span>
+                            </div>
+                            <textarea id="icAnswerBox" maxlength="1000"
+                                placeholder="Your spoken answer will appear here..."
+                                oninput="icUpdateCharCount(); icSpeechTranscript = this.value;"
+                                style="width:100%; border:none; background:transparent; resize:none; font-size:13.5px; color:#2d2a3e; font-family:inherit; outline:none; min-height:60px;"></textarea>
+                        </div>
+
+                        <style>
+                        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+                        @keyframes wave { 0%,100%{height:4px} 50%{height:20px} }
+                        </style>
+
+                        <!-- Bottom Actions -->
+                        <div class="ic-answer-actions" style="margin-top:12px;">
                             <button class="ic-mic-btn" id="icMicBtn" onclick="icToggleRecording()">
-                                <i class="bi bi-mic"></i> Record Answer (Optional)
+                                <i class="bi bi-mic"></i> Record Answer
                             </button>
                             <button class="ic-submit-btn" id="icSubmitBtn" onclick="icSubmitAnswer()">
                                 <i class="bi bi-send"></i> Submit Answer
                             </button>
                         </div>
-
-                        <style>
-                        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-                        </style>
                     </div>
                 </div>
 
@@ -526,10 +568,11 @@
 <script>
 let icSelections = { type: "Technical Interview", branch: "Computer Engineering", experience: "Fresher", source: "Placement Interview" };
 let icQuestions = [];
-let icAnswers = {};   // { qIndex: { answer, feedback } }
+let icAnswers = {};
 let icCurrentIndex = 0;
 let icRecognition = null;
 let icRecording = false;
+let icSpeechTranscript = '';
 
 function icBranchChanged(){
     const select = document.getElementById('icBranchSelect');
@@ -557,6 +600,24 @@ function icUpdateCharCount(){
 
 /* ===== Camera start/stop ===== */
 let icCameraStream = null;
+let icTimerInterval = null;
+let icTimerSeconds = 0;
+
+function icStartTimer(){
+    icTimerSeconds = 0;
+    icTimerInterval = setInterval(() => {
+        icTimerSeconds++;
+        const m = String(Math.floor(icTimerSeconds/60)).padStart(2,'0');
+        const s = String(icTimerSeconds%60).padStart(2,'0');
+        const el = document.getElementById('icRecTimer');
+        if(el) el.innerText = m+':'+s;
+    }, 1000);
+}
+
+function icStopTimer(){
+    clearInterval(icTimerInterval);
+    icTimerSeconds = 0;
+}
 
 async function icStartCamera(){
     try {
@@ -564,7 +625,9 @@ async function icStartCamera(){
         const video = document.getElementById('icCameraFeed');
         video.srcObject = icCameraStream;
         document.getElementById('icCameraOff').style.display = 'none';
-        document.getElementById('icCameraOnBadge').style.display = 'flex';
+        const badge = document.getElementById('icRecordingBadge');
+        badge.style.display = 'flex';
+        icStartTimer();
     } catch(e) {
         console.log('Camera not available:', e);
     }
@@ -576,7 +639,8 @@ function icStopCamera(){
         icCameraStream = null;
         document.getElementById('icCameraFeed').srcObject = null;
         document.getElementById('icCameraOff').style.display = 'flex';
-        document.getElementById('icCameraOnBadge').style.display = 'none';
+        document.getElementById('icRecordingBadge').style.display = 'none';
+        icStopTimer();
     }
 }
 
@@ -586,22 +650,139 @@ function icToggleRecording(){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-        alert('Voice input is not supported in this browser. Please type your answer instead.');
+        alert('Voice input is not supported in this browser.');
         return;
     }
 
     if (icRecording) {
         icRecognition.stop();
-        icStopCamera();
-        document.getElementById('icRecordingBadge').style.display = 'none';
-        document.getElementById('icListeningBadge').style.display = 'none';
+        icRecording = false;
+        btn.classList.remove('recording');
+        btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer';
+        const badge = document.getElementById('icListeningBadge');
+        if(badge) badge.style.display = 'none';
         return;
     }
 
-    // Start camera when recording starts
-    icStartCamera();
-    document.getElementById('icRecordingBadge').style.display = 'flex';
-    document.getElementById('icListeningBadge').style.display = 'inline-block';
+    icRecognition = new SpeechRecognition();
+    icRecognition.lang = 'en-US';
+    icRecognition.interimResults = true;
+    icRecognition.continuous = true;
+
+    icRecognition.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' ';
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        const box = document.getElementById('icAnswerBox');
+        if(box) {
+            box.value = finalTranscript + interimTranscript;
+            icSpeechTranscript = box.value;
+            icUpdateCharCount();
+        }
+    };
+
+    icRecognition.onerror = (e) => {
+        console.log('Speech error:', e.error);
+    };
+
+    icRecognition.onend = () => {
+        if(icRecording) {
+            // Restart if still supposed to be recording
+            icRecognition.start();
+        } else {
+            btn.classList.remove('recording');
+            btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer';
+            const badge = document.getElementById('icListeningBadge');
+            if(badge) badge.style.display = 'none';
+        }
+    };
+
+    icRecognition.start();
+    icRecording = true;
+    btn.classList.add('recording');
+    btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Recording';
+    const badge = document.getElementById('icListeningBadge');
+    if(badge) badge.style.display = 'inline-block';
+}
+
+function icSpeakQuestion(text){
+    window.speechSynthesis.cancel();
+    icStopCamera();
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = 0.95;
+    utter.pitch = 1.1;
+
+    const speakBadge = document.getElementById('icSpeakingBadge');
+    const soundWave = document.getElementById('icSoundWave');
+    const robot = document.getElementById('icRobotAvatar');
+
+    utter.onstart = () => {
+        if(speakBadge) speakBadge.style.display = 'flex';
+        if(soundWave) soundWave.style.display = 'flex';
+        if(robot) robot.style.transform = 'scale(1.1)';
+    };
+    utter.onend = () => {
+        if(speakBadge) speakBadge.style.display = 'none';
+        if(soundWave) soundWave.style.display = 'none';
+        if(robot) robot.style.transform = 'scale(1)';
+        // Auto start camera only (not mic — user will click Record Answer)
+        icStartCamera();
+    };
+
+    window.speechSynthesis.speak(utter);
+}
+
+function icStopAll(){
+    // Stop mic
+    if(icRecording && icRecognition){
+        icRecognition.stop();
+        icRecording = false;
+    }
+    // Stop camera
+    icStopCamera();
+    // Hide recording badge
+    const badge = document.getElementById('icRecordingBadge');
+    if(badge) badge.style.display = 'none';
+    icStopTimer();
+}
+
+function icToggleCamera(){
+    if(icCameraStream){
+        icStopCamera();
+        const btn = document.getElementById('icCamBtn');
+        if(btn) btn.style.background = 'rgba(220,38,38,0.7)';
+    } else {
+        icStartCamera();
+        const btn = document.getElementById('icCamBtn');
+        if(btn) btn.style.background = 'rgba(0,0,0,0.5)';
+    }
+}
+
+function icToggleMic(){
+    const btn = document.getElementById('icMicToggleBtn');
+    if(icRecording){
+        if(icRecognition) icRecognition.stop();
+        icRecording = false;
+        if(btn){ btn.style.background = 'rgba(220,38,38,0.7)'; btn.innerHTML = '<i class="bi bi-mic-mute"></i>'; }
+    } else {
+        icStartRecordingOnly();
+        if(btn){ btn.style.background = 'rgba(0,0,0,0.5)'; btn.innerHTML = '<i class="bi bi-mic"></i>'; }
+    }
+}
+function icStartRecordingOnly(){
+    const btn = document.getElementById('icMicBtn');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition || icRecording) return;
+
+    document.getElementById('icListeningBadge') && (document.getElementById('icListeningBadge').style.display = 'inline-block');
 
     icRecognition = new SpeechRecognition();
     icRecognition.lang = 'en-US';
@@ -611,25 +792,29 @@ function icToggleRecording(){
     icRecognition.onresult = (event) => {
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
+            transcript += event.results[i][0].transcript + ' ';
         }
         const box = document.getElementById('icAnswerBox');
-        box.value = (box.value + ' ' + transcript).trim();
-        icUpdateCharCount();
+        const current = box ? box.value : '';
+        const updated = (current + ' ' + transcript).trim();
+        if(box) box.value = updated;
+        icSpeechTranscript = updated;
+        console.log('Transcript:', icSpeechTranscript);
     };
 
     icRecognition.onend = () => {
         icRecording = false;
-        btn.classList.remove('recording');
-        btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer (Optional)';
-        document.getElementById('icRecordingBadge').style.display = 'none';
-        document.getElementById('icListeningBadge').style.display = 'none';
+        if(btn){ btn.classList.remove('recording'); btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer (Optional)'; }
     };
 
     icRecognition.start();
     icRecording = true;
-    btn.classList.add('recording');
-    btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Recording';
+    if(btn){ btn.classList.add('recording'); btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Recording'; }
+}
+
+function icListenAgain(){
+    const q = icQuestions[icCurrentIndex];
+    if(q) icSpeakQuestion(q);
 }
 
 async function icGenerate(){
@@ -687,10 +872,22 @@ function icShowQuestion(index){
     document.getElementById('icQCount').innerText = `Question ${index + 1} of ${icQuestions.length}`;
     document.getElementById('icQText').innerText = icQuestions[index];
 
-    const existing = icAnswers[index];
+    // Show speaking badge for 2 seconds when new question loads
+    const speakBadge = document.getElementById('icSpeakingBadge');
+    if(speakBadge){
+        speakBadge.style.display = 'flex';
+        setTimeout(() => { speakBadge.style.display = 'none'; }, 2500);
+    }
+
+    // Speak the question aloud
+    icSpeechTranscript = '';
     const box = document.getElementById('icAnswerBox');
-    box.value = existing ? existing.answer : '';
-    box.disabled = !!existing;
+    if(box) box.value = '';
+    icSpeakQuestion(icQuestions[index]);
+
+    const existing = icAnswers[index];
+    if(box) box.value = existing ? existing.answer : '';
+    if(box) box.disabled = !!existing;
     icUpdateCharCount();
 
     document.getElementById('icSubmitBtn').style.display = existing ? 'none' : 'flex';
@@ -707,11 +904,23 @@ function icShowQuestion(index){
 }
 
 async function icSubmitAnswer(){
-    const answer = document.getElementById('icAnswerBox').value.trim();
-    if (!answer) {
-        alert('Please write an answer first.');
-        return;
+    // Stop mic first and wait a moment for final transcript
+    if(icRecording && icRecognition){
+        icRecognition.stop();
+        icRecording = false;
     }
+    
+    // Small delay to let onresult fire with final transcript
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Stop camera
+    icStopCamera();
+
+    const answerBox = document.getElementById('icAnswerBox');
+    const answer = (answerBox ? answerBox.value.trim() : '') || icSpeechTranscript.trim();
+    const finalAnswer = answer || '(No answer provided)';
+
+    console.log('Submitting answer:', finalAnswer);
 
     const btn = document.getElementById('icSubmitBtn');
     btn.disabled = true;
@@ -723,7 +932,7 @@ async function icSubmitAnswer(){
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 question: icQuestions[icCurrentIndex],
-                answer: answer,
+                answer: finalAnswer,
                 type: icSelections.type
             })
         });
