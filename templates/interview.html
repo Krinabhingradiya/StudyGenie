@@ -667,23 +667,21 @@ function icToggleRecording(){
     icRecognition = new SpeechRecognition();
     icRecognition.lang = 'en-US';
     icRecognition.interimResults = true;
-    icRecognition.continuous = true;
+    icRecognition.continuous = false;
+    icRecognition.maxAlternatives = 1;
 
     icRecognition.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+        let transcript = '';
         for (let i = 0; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript + ' ';
-            } else {
-                interimTranscript += event.results[i][0].transcript;
-            }
+            transcript += event.results[i][0].transcript + ' ';
         }
+        transcript = transcript.trim();
         const box = document.getElementById('icAnswerBox');
-        if(box) {
-            box.value = finalTranscript + interimTranscript;
-            icSpeechTranscript = box.value;
+        if(box && transcript) {
+            box.value = transcript;
+            icSpeechTranscript = transcript;
             icUpdateCharCount();
+            console.log('Got transcript:', transcript);
         }
     };
 
@@ -692,9 +690,10 @@ function icToggleRecording(){
     };
 
     icRecognition.onend = () => {
+        console.log('Recognition ended, icRecording:', icRecording);
         if(icRecording) {
-            // Restart if still supposed to be recording
-            icRecognition.start();
+            // Restart for continuous effect
+            try { icRecognition.start(); } catch(e) { console.log('restart error:', e); }
         } else {
             btn.classList.remove('recording');
             btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer';
