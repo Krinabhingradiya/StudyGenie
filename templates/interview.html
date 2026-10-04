@@ -644,18 +644,16 @@ function icStopCamera(){
     }
 }
 
-/* ===== Optional voice input via browser Speech Recognition ===== */
-function icToggleRecording(){
+/* ===== MediaRecorder based recording ===== */
+let mediaRecorder = null;
+let audioChunks = [];
+
+async function icToggleRecording(){
     const btn = document.getElementById('icMicBtn');
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-        alert('Voice input is not supported in this browser.');
-        return;
-    }
-
-    if (icRecording) {
-        icRecognition.stop();
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        // STOP
+        mediaRecorder.stop();
         icRecording = false;
         btn.classList.remove('recording');
         btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer';
@@ -664,52 +662,54 @@ function icToggleRecording(){
         return;
     }
 
-    icRecognition = new SpeechRecognition();
-    icRecognition.lang = 'en-US';
-    icRecognition.interimResults = true;
-    icRecognition.continuous = true;
+    // START
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
 
-    let accumulatedTranscript = '';
+        mediaRecorder.ondataavailable = (e) => {
+            if(e.data.size > 0) audioChunks.push(e.data);
+        };
 
-    icRecognition.onresult = (event) => {
-        let interimTranscript = '';
-        accumulatedTranscript = '';
-        for (let i = 0; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-                accumulatedTranscript += event.results[i][0].transcript + ' ';
-            } else {
-                interimTranscript += event.results[i][0].transcript;
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append('audio', blob, 'audio.webm');
+
+            const box = document.getElementById('icAnswerBox');
+            if(box) box.value = '🎙 Transcribing...';
+
+            try {
+                const res = await fetch('/transcribe-audio', { method: 'POST', body: formData });
+                const data = await res.json();
+                if(data.success && data.text) {
+                    if(box) box.value = data.text;
+                    icSpeechTranscript = data.text;
+                    icUpdateCharCount();
+                } else {
+                    if(box) box.value = '';
+                }
+            } catch(e) {
+                console.log('Transcribe error:', e);
+                if(box) box.value = '';
             }
-        }
-        const box = document.getElementById('icAnswerBox');
-        if(box) {
-            box.value = (accumulatedTranscript + interimTranscript).trim();
-            icSpeechTranscript = box.value;
-            icUpdateCharCount();
-        }
-    };
 
-    icRecognition.onerror = (e) => {
-        console.log('Speech error:', e.error);
-    };
+            // Stop mic tracks
+            stream.getTracks().forEach(t => t.stop());
+        };
 
-    icRecognition.onend = () => {
-        if(icRecording) {
-            try { icRecognition.start(); } catch(e) {}
-        } else {
-            btn.classList.remove('recording');
-            btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer';
-            const badge = document.getElementById('icListeningBadge');
-            if(badge) badge.style.display = 'none';
-        }
-    };
+        mediaRecorder.start();
+        icRecording = true;
+        btn.classList.add('recording');
+        btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Recording';
+        const badge = document.getElementById('icListeningBadge');
+        if(badge) badge.style.display = 'inline-block';
 
-    icRecognition.start();
-    icRecording = true;
-    btn.classList.add('recording');
-    btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Recording';
-    const badge = document.getElementById('icListeningBadge');
-    if(badge) badge.style.display = 'inline-block';
+    } catch(e) {
+        alert('Microphone access denied. Please allow mic permission.');
+        console.log('Mic error:', e);
+    }
 }
 
 function icSpeakQuestion(text){

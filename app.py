@@ -1513,6 +1513,31 @@ def evaluate_interview_answer_api():
         print("INTERVIEW FEEDBACK ERROR:", e)
         return jsonify({"success": False, "message": "Could not evaluate your answer. Please try again."})
 
+# ---------------- TRANSCRIBE AUDIO ---------------- #
+
+@app.route("/transcribe-audio", methods=["POST"])
+def transcribe_audio():
+    if "user_email" not in session:
+        return jsonify({"success": False, "text": ""})
+    try:
+        audio_file = request.files.get("audio")
+        if not audio_file:
+            return jsonify({"success": False, "text": ""})
+        
+        audio_bytes = audio_file.read()
+        
+        transcription = client.audio.transcriptions.create(
+            model="whisper-large-v3",
+            file=("audio.webm", audio_bytes, "audio/webm"),
+            response_format="text"
+        )
+        
+        text = transcription if isinstance(transcription, str) else transcription.text
+        return jsonify({"success": True, "text": text.strip()})
+    except Exception as e:
+        print("TRANSCRIBE ERROR:", e)
+        return jsonify({"success": False, "text": ""})
+
 # ---------------- LOGOUT ---------------- #
 
 @app.route("/logout")
