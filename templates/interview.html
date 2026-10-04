@@ -669,19 +669,21 @@ function icToggleRecording(){
     icRecognition.interimResults = true;
     icRecognition.continuous = true;
 
+    let accumulatedTranscript = '';
+
     icRecognition.onresult = (event) => {
-        let finalTranscript = '';
         let interimTranscript = '';
+        accumulatedTranscript = '';
         for (let i = 0; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript + ' ';
+                accumulatedTranscript += event.results[i][0].transcript + ' ';
             } else {
                 interimTranscript += event.results[i][0].transcript;
             }
         }
         const box = document.getElementById('icAnswerBox');
         if(box) {
-            box.value = (finalTranscript + interimTranscript).trim();
+            box.value = (accumulatedTranscript + interimTranscript).trim();
             icSpeechTranscript = box.value;
             icUpdateCharCount();
         }
@@ -732,7 +734,7 @@ function icSpeakQuestion(text){
         if(speakBadge) speakBadge.style.display = 'none';
         if(soundWave) soundWave.style.display = 'none';
         if(robot) robot.style.transform = 'scale(1)';
-        // Auto start camera only (not mic — user will click Record Answer)
+        // Only start camera, NOT mic — user will click Record Answer
         icStartCamera();
     };
 
@@ -777,38 +779,8 @@ function icToggleMic(){
     }
 }
 function icStartRecordingOnly(){
-    const btn = document.getElementById('icMicBtn');
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition || icRecording) return;
-
-    document.getElementById('icListeningBadge') && (document.getElementById('icListeningBadge').style.display = 'inline-block');
-
-    icRecognition = new SpeechRecognition();
-    icRecognition.lang = 'en-US';
-    icRecognition.interimResults = false;
-    icRecognition.continuous = true;
-
-    icRecognition.onresult = (event) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript + ' ';
-        }
-        const box = document.getElementById('icAnswerBox');
-        const current = box ? box.value : '';
-        const updated = (current + ' ' + transcript).trim();
-        if(box) box.value = updated;
-        icSpeechTranscript = updated;
-        console.log('Transcript:', icSpeechTranscript);
-    };
-
-    icRecognition.onend = () => {
-        icRecording = false;
-        if(btn){ btn.classList.remove('recording'); btn.innerHTML = '<i class="bi bi-mic"></i> Record Answer (Optional)'; }
-    };
-
-    icRecognition.start();
-    icRecording = true;
-    if(btn){ btn.classList.add('recording'); btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Recording'; }
+    // Just call icToggleRecording — same logic
+    if(!icRecording) icToggleRecording();
 }
 
 function icListenAgain(){
