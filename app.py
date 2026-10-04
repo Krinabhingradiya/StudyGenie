@@ -912,26 +912,20 @@ def evaluate_interview_answer(question, answer, interview_type):
     try:
         response = client.chat.completions.create(
             model="openai/gpt-oss-20b",
-            max_tokens=700,
+            max_tokens=500,
             temperature=0.3,
-            response_format={"type": "json_object"},
             messages=[
                 {
                     "role": "user",
-                    "content": f"""Evaluate this interview answer and return JSON only.
+                    "content": f"""Evaluate this interview answer. Return ONLY a JSON object, nothing else.
 
 Question: {question}
 Answer: {answer}
 
-Return this exact JSON structure:
-{{"score": 6, "confidence": "Average", "strengths": ["Clear communication"], "improvements": ["Add more detail"]}}
+JSON format:
+{{"score": 7, "confidence": "Good", "strengths": ["Clear answer"], "improvements": ["Add examples"]}}
 
-Rules:
-- score: integer 0-10
-- confidence: one of "Needs Work", "Average", "Good", "Excellent"  
-- strengths: array of 1-2 strings
-- improvements: array of 1-2 strings
-- If answer is empty or "(No answer provided)", give score 0"""
+score must be 0-10 integer. confidence must be one of: Needs Work, Average, Good, Excellent."""
                 }
             ]
         )
@@ -945,13 +939,15 @@ Rules:
             raw = raw[start:end + 1]
 
         data = json.loads(raw)
-
         data.setdefault("score", 5)
         data.setdefault("confidence", "Average")
-        data.setdefault("strengths", [])
-        data.setdefault("improvements", [])
-
+        data.setdefault("strengths", ["Answer was received."])
+        data.setdefault("improvements", ["Try to elaborate more."])
         return data
+
+    except Exception as e:
+        print("EVALUATE ERROR:", e)
+        return {"score": 5, "confidence": "Average", "strengths": ["Answer received."], "improvements": ["Could not fully evaluate."]}
 
     except Exception as e:
         print("INTERVIEW EVALUATION ERROR:", e)
