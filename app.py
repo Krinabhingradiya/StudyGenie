@@ -918,25 +918,20 @@ def evaluate_interview_answer(question, answer, interview_type):
             messages=[
                 {
                     "role": "user",
-                    "content": f"""You are an AI interview coach evaluating a candidate's spoken/written
-answer during a {interview_type}.
+                    "content": f"""Evaluate this interview answer and return JSON only.
 
 Question: {question}
-Candidate's Answer: {answer}
+Answer: {answer}
 
-Score the answer out of 10 based on clarity, correctness, structure and confidence.
-
-Return ONLY valid JSON, no markdown, no extra text, in exactly this format:
-{{"score": 7, "confidence": "Good", "strengths": ["point one", "point two"], "improvements": ["point one", "point two"]}}
+Return this exact JSON structure:
+{{"score": 6, "confidence": "Average", "strengths": ["Clear communication"], "improvements": ["Add more detail"]}}
 
 Rules:
-- "score" is an integer from 0 to 10.
-- "confidence" is exactly one of: "Needs Work", "Average", "Good", "Excellent".
-- "strengths": 1 to 3 short specific things the candidate did well.
-- "improvements": 1 to 3 short specific things to improve.
-- Keep every point under 15 words.
-- If the answer is empty, off-topic, or nonsense, score it low and say so honestly.
-"""
+- score: integer 0-10
+- confidence: one of "Needs Work", "Average", "Good", "Excellent"  
+- strengths: array of 1-2 strings
+- improvements: array of 1-2 strings
+- If answer is empty or "(No answer provided)", give score 0"""
                 }
             ]
         )
